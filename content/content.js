@@ -5,7 +5,7 @@
  *   - setSongMeta() called before API fetch so title always shows in header
  *   - setSongMeta() also called on error so header is never stuck on "Loading..."
  */
-(function() {
+(function () {
   YTLyricsLogger.success('Content script loaded');
 
   let syncInterval = null;

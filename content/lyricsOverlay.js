@@ -13,13 +13,14 @@ const LyricsOverlay = {
   lyricsContainer: null,
   debugContainer: null,
   nowPlayingBadge: null,
+  minBtn: null,
   activeLyricIndex: -1,
   parsedLyrics: [],
   offset: 0,
   offsetDisplay: null,
   currentVideoId: null,
 
-  init: function() {
+  init: function () {
     // Only build the DOM once — subsequent calls just show the panel
     if (document.getElementById('yt-lyrics-overlay')) {
       this.show();
@@ -56,6 +57,7 @@ const LyricsOverlay = {
     controls.id = 'yt-lyrics-controls';
 
     const offsetDecBtn = document.createElement('button');
+    offsetDecBtn.className = 'yt-lyric-offset-btn dec-btn';
     offsetDecBtn.innerHTML = '&minus;';
     offsetDecBtn.title = 'Delay lyrics (−0.5s)';
     offsetDecBtn.onclick = () => this.adjustOffset(-0.5);
@@ -65,16 +67,19 @@ const LyricsOverlay = {
     this.offsetDisplay.innerText = '0.0s';
 
     const offsetIncBtn = document.createElement('button');
+    offsetIncBtn.className = 'yt-lyric-offset-btn inc-btn';
     offsetIncBtn.innerHTML = '&plus;';
     offsetIncBtn.title = 'Advance lyrics (+0.5s)';
     offsetIncBtn.onclick = () => this.adjustOffset(0.5);
 
-    const minBtn = document.createElement('button');
-    minBtn.innerHTML = '&#x2012;';
-    minBtn.title = 'Minimize';
-    minBtn.onclick = () => this.toggleMinimize();
+    this.minBtn = document.createElement('button');
+    this.minBtn.className = 'yt-lyrics-min-btn';
+    this.minBtn.innerHTML = '&#x2012;';
+    this.minBtn.title = 'Minimize';
+    this.minBtn.onclick = () => this.toggleMinimize();
 
     const closeBtn = document.createElement('button');
+    closeBtn.className = 'yt-lyric-close-btn';
     closeBtn.innerHTML = '&#x2715;';
     closeBtn.title = 'Close';
     closeBtn.onclick = () => this.hide();
@@ -82,7 +87,7 @@ const LyricsOverlay = {
     controls.appendChild(offsetDecBtn);
     controls.appendChild(this.offsetDisplay);
     controls.appendChild(offsetIncBtn);
-    controls.appendChild(minBtn);
+    controls.appendChild(this.minBtn);
     controls.appendChild(closeBtn);
 
     header.appendChild(this.nowPlayingBadge);
@@ -110,7 +115,7 @@ const LyricsOverlay = {
   },
 
   // ── State Reset on New Song (Bug 1 & 4 Fix) ──────────────────────
-  reset: function(videoId) {
+  reset: function (videoId) {
     this.currentVideoId = videoId;
     this.parsedLyrics = [];
     this.activeLyricIndex = -1;
@@ -124,7 +129,7 @@ const LyricsOverlay = {
   },
 
   // ── Always Show Song Name (Bug 5 Fix) ────────────────────────────
-  setSongMeta: function(title, artist) {
+  setSongMeta: function (title, artist) {
     const songEl = document.getElementById('yt-lyric-song');
     const artistEl = document.getElementById('yt-lyric-artist');
     if (songEl) songEl.innerText = title || 'Unknown Song';
@@ -132,7 +137,7 @@ const LyricsOverlay = {
   },
 
   // ── Now Playing Badge ─────────────────────────────────────────────
-  setPlayingState: function(isPlaying) {
+  setPlayingState: function (isPlaying) {
     if (!this.nowPlayingBadge) return;
     if (isPlaying) {
       this.nowPlayingBadge.classList.add('is-playing');
@@ -142,7 +147,7 @@ const LyricsOverlay = {
   },
 
   // ── Per-Song Offset Cache ─────────────────────────────────────────
-  _loadOffset: function(videoId) {
+  _loadOffset: function (videoId) {
     chrome.storage.local.get(['lyric_offsets'], (result) => {
       const offsets = result.lyric_offsets || {};
       if (offsets[videoId] !== undefined) {
@@ -155,7 +160,7 @@ const LyricsOverlay = {
     });
   },
 
-  _saveOffset: function() {
+  _saveOffset: function () {
     if (!this.currentVideoId) return;
     chrome.storage.local.get(['lyric_offsets'], (result) => {
       const offsets = result.lyric_offsets || {};
@@ -165,7 +170,7 @@ const LyricsOverlay = {
   },
 
   // ── Debug Panel Visibility ────────────────────────────────────────
-  _applyDebugVisibility: function() {
+  _applyDebugVisibility: function () {
     chrome.storage.local.get(['debugMode'], (result) => {
       const show = result.debugMode === true;
       if (this.debugContainer) {
@@ -175,7 +180,7 @@ const LyricsOverlay = {
   },
 
   // ── Draggable Logic ───────────────────────────────────────────────
-  makeDraggable: function(element, dragHandle) {
+  makeDraggable: function (element, dragHandle) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
     dragHandle.onmousedown = (e) => {
@@ -205,21 +210,30 @@ const LyricsOverlay = {
     }
   },
 
-  show: function() {
+  show: function () {
     if (this.container) this.container.style.display = 'flex';
     this._applyDebugVisibility();
   },
 
-  hide: function() {
+  hide: function () {
     if (this.container) this.container.style.display = 'none';
   },
 
-  toggleMinimize: function() {
+  toggleMinimize: function () {
     if (!this.container) return;
-    this.container.classList.toggle('yt-lyrics-minimized');
+    const isMinimized = this.container.classList.toggle('yt-lyrics-minimized');
+    if (this.minBtn) {
+      if (isMinimized) {
+        this.minBtn.innerHTML = '&#x25FB;';
+        this.minBtn.title = 'Maximize';
+      } else {
+        this.minBtn.innerHTML = '&#x2012;';
+        this.minBtn.title = 'Minimize';
+      }
+    }
   },
 
-  adjustOffset: function(delta) {
+  adjustOffset: function (delta) {
     this.offset = parseFloat((this.offset + delta).toFixed(1));
     if (this.offsetDisplay) {
       this.offsetDisplay.innerText = (this.offset > 0 ? '+' : '') + this.offset.toFixed(1) + 's';
@@ -227,7 +241,7 @@ const LyricsOverlay = {
     this._saveOffset();
   },
 
-  updateDebugInfo: function(info) {
+  updateDebugInfo: function (info) {
     if (!this.debugContainer) return;
     let html = '<strong>Debug Log</strong><br>';
     for (const [key, value] of Object.entries(info)) {
@@ -236,13 +250,13 @@ const LyricsOverlay = {
     this.debugContainer.innerHTML = html;
   },
 
-  displayMessage: function(message) {
+  displayMessage: function (message) {
     if (this.lyricsContainer) {
       this.lyricsContainer.innerHTML = `<div class="yt-lyrics-message">${message}</div>`;
     }
   },
 
-  displayLyrics: function(lyricsData) {
+  displayLyrics: function (lyricsData) {
     // Update header with confirmed API data
     this.setSongMeta(lyricsData.title, lyricsData.artist);
 
@@ -268,7 +282,7 @@ const LyricsOverlay = {
     }
   },
 
-  syncLyrics: function(currentTime) {
+  syncLyrics: function (currentTime) {
     if (this.parsedLyrics.length === 0) return;
 
     const adjustedTime = currentTime + this.offset;
