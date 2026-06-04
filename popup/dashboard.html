@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuneLens Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="dash-wrap">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-title">
+        <div class="header-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        </div>
+        <div>
+          <h1>TuneLens Analytics</h1>
+          <p class="page-subtitle">Your personal listening report</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <section class="cards-grid">
+      <div class="stat-card accent">
+        <div class="card-icon">⏱</div>
+        <div class="card-body">
+          <div class="card-value" id="total-time">—</div>
+          <div class="card-label">Total Listening Time</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="card-icon">🎵</div>
+        <div class="card-body">
+          <div class="card-value" id="distinct-songs">—</div>
+          <div class="card-label">Unique Songs</div>
+          <div class="card-sub" id="total-sessions"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="card-icon">🎤</div>
+        <div class="card-body">
+          <div class="card-value" id="unique-artists">—</div>
+          <div class="card-label">Unique Artists</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="card-icon">📅</div>
+        <div class="card-body">
+          <div class="card-value" id="this-week-time">—</div>
+          <div class="card-label">This Week</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Heatmap & Discovery -->
+    <section class="grid-2-col">
+      <!-- Heatmap (Current Week) -->
+      <div class="chart-card heatmap-card">
+        <div class="chart-header">
+          <h2>Weekly Listening Heatmap</h2>
+          <span class="chart-badge">This Week</span>
+        </div>
+        <div class="heatmap-container" id="heatmap-grid">
+          <!-- JS will inject 7 day blocks here -->
+        </div>
+        <div class="heatmap-legend">
+          <span>Less</span>
+          <div class="heat-box level-0"></div>
+          <div class="heat-box level-1"></div>
+          <div class="heat-box level-2"></div>
+          <div class="heat-box level-3"></div>
+          <div class="heat-box level-4"></div>
+          <span>More</span>
+        </div>
+      </div>
+
+      <!-- Discovery Metrics -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Discovery Metrics</h2>
+          <span class="chart-badge">Exploration</span>
+        </div>
+        <div class="discovery-grid">
+          <div class="discovery-item">
+            <div class="d-val" id="d-score">—</div>
+            <div class="d-label">Discovery Score</div>
+          </div>
+          <div class="discovery-item">
+            <div class="d-val" id="d-pct">—</div>
+            <div class="d-label">Exploration %</div>
+          </div>
+          <div class="discovery-item sub">
+            <div class="d-val small" id="new-songs-week">—</div>
+            <div class="d-label">New Songs (Week)</div>
+          </div>
+          <div class="discovery-item sub">
+            <div class="d-val small" id="new-artists-week">—</div>
+            <div class="d-label">New Artists (Week)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Replay Analytics & Timeline Highlights -->
+    <section class="grid-2-col">
+      <!-- Replay Analytics -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Replay Intelligence</h2>
+          <span class="chart-badge">Behavior</span>
+        </div>
+        <div class="replay-stats">
+          <div class="replay-row">
+            <span>Average Completion Rate</span>
+            <strong id="avg-completion" class="accent-text">—</strong>
+          </div>
+          <div class="replay-bar">
+            <div id="comp-bar-fill" class="replay-fill" style="width:0%"></div>
+          </div>
+          <div class="replay-metrics">
+            <div><strong id="completed-plays">—</strong> Completed</div>
+            <div><strong id="skipped-plays">—</strong> Skipped</div>
+            <div><strong id="partial-plays">—</strong> Partial</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Highlights -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Timeline Insights</h2>
+          <span class="chart-badge">Habits</span>
+        </div>
+        <div class="timeline-highlights">
+          <div class="th-item">
+            <div class="th-label">Most Active Hour</div>
+            <div class="th-val" id="most-active-hour">—</div>
+          </div>
+          <div class="th-item">
+            <div class="th-label">Most Active Day</div>
+            <div class="th-val" id="most-active-day">—</div>
+          </div>
+          <div class="th-item">
+            <div class="th-label">Peak Listening Window</div>
+            <div class="th-val" id="peak-window">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detailed Timeline Charts -->
+    <section class="chart-card">
+      <div class="chart-header">
+        <h2>Hourly Distribution</h2>
+        <span class="chart-badge">24-Hour Cycle</span>
+      </div>
+      <div class="timeline-chart hourly-chart" id="hourly-chart">
+        <!-- JS injects 24 bars -->
+      </div>
+    </section>
+
+    <!-- Top Stats -->
+    <section class="grid-2-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Top Artists</h2>
+        </div>
+        <div id="artists-chart" class="css-chart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2>Top Songs</h2>
+        </div>
+        <div id="songs-chart" class="css-chart"></div>
+      </div>
+    </section>
+    
+    <!-- Tooltip container -->
+    <div id="heatmap-tooltip" class="custom-tooltip" style="display:none;"></div>
+
+  </div>
+  <script src="../services/analyticsEngine.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

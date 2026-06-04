@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TuneLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="popup-header">
+      <div class="header-logo">
+        <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+          <rect width="100" height="100" rx="20" fill="#7B61FF"/>
+          <path d="M38 28L38 72L72 50Z" fill="white"/>
+        </svg>
+      </div>
+      <h1>TuneLens</h1>
+    </div>
+
+    <div class="quick-stats">
+      <div class="stat-box">
+        <span class="stat-label">Today</span>
+        <span class="stat-value" id="today-time">—</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">Top Artist</span>
+        <span class="stat-value" id="top-artist">—</span>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button id="btn-dashboard" class="btn primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        TuneLens Dashboard
+      </button>
+      <button id="btn-history" class="btn secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        TuneLens History
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="settings-row">
+      <span class="settings-label">Debug Logs</span>
+      <label class="switch">
+        <input type="checkbox" id="debug-toggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <p class="status" id="status-msg"></p>
+  </div>
+
+  <script src="../services/analyticsEngine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

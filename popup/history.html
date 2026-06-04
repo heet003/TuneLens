@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuneLens History</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="history.css">
+</head>
+<body>
+  <div class="history-wrap">
+
+    <div class="page-header">
+      <div class="page-title">
+        <div class="header-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        </div>
+        <div>
+          <h1>TuneLens History</h1>
+          <p class="page-subtitle" id="record-count">Loading...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-export-csv" class="btn outline">Export CSV</button>
+        <button id="btn-export-json" class="btn outline">Export JSON</button>
+        <button id="btn-clear" class="btn danger">Clear All</button>
+      </div>
+    </div>
+
+    <div class="search-bar-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8EA8" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-box" placeholder="Search by song or artist...">
+    </div>
+
+    <div class="table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Song</th>
+            <th>Artist</th>
+            <th>Duration</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <div class="empty-icon">🎧</div>
+        <p>No listening history yet</p>
+        <span>Go play some music on YouTube!</span>
+      </div>
+    </div>
+
+    <div class="pagination">
+      <button id="btn-prev" class="page-btn" disabled>← Prev</button>
+      <span id="page-info">Page 1 of 1</span>
+      <button id="btn-next" class="page-btn">Next →</button>
+    </div>
+
+  </div>
+
+  <script src="../services/analyticsEngine.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>

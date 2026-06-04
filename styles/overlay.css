@@ -1,0 +1,247 @@
+/* ═══════════════════════════════════════════════════════════════
+   TuneLens — Floating Overlay
+   Design: Dark glassmorphism with purple (#7B61FF) accent
+   Font: system-ui stack (runs inside YouTube page context)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Container ────────────────────────────────────────────────── */
+#yt-lyrics-overlay {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 380px;
+  height: 580px;
+  background: rgba(16, 14, 28, 0.88);
+  color: #fff;
+  z-index: 2147483646;
+  border-radius: 20px;
+  border: 1px solid rgba(123, 97, 255, 0.2);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.7),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05) inset;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  resize: both;
+  overflow: hidden;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+#yt-lyrics-overlay.yt-lyrics-minimized {
+  height: 58px !important;
+  resize: none;
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+#yt-lyrics-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(30, 24, 52, 0.9) 0%, rgba(30, 24, 52, 0.2) 100%);
+  border-bottom: 1px solid rgba(123, 97, 255, 0.15);
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+#yt-lyrics-header:active {
+  cursor: grabbing;
+}
+
+/* ── Now Playing Badge ─────────────────────────────────────────── */
+#yt-now-playing-badge {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 18px;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+#yt-now-playing-badge .np-dot {
+  display: inline-block;
+  width: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 0.3s;
+}
+
+/* Dots heights for visual rhythm */
+#yt-now-playing-badge .np-dot:nth-child(1) { height: 8px; }
+#yt-now-playing-badge .np-dot:nth-child(2) { height: 14px; }
+#yt-now-playing-badge .np-dot:nth-child(3) { height: 10px; }
+
+/* When playing: purple dots with staggered pulse animation */
+#yt-now-playing-badge.is-playing .np-dot {
+  background: #7B61FF;
+  animation: yt-bar-pulse 1.1s ease-in-out infinite alternate;
+}
+
+#yt-now-playing-badge.is-playing .np-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+#yt-now-playing-badge.is-playing .np-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+#yt-now-playing-badge.is-playing .np-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes yt-bar-pulse {
+  0%   { transform: scaleY(0.5); opacity: 0.7; }
+  100% { transform: scaleY(1.4); opacity: 1; }
+}
+
+/* ── Title Info ────────────────────────────────────────────────── */
+#yt-lyrics-title-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#yt-lyric-song {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+  letter-spacing: 0.2px;
+}
+
+#yt-lyric-artist {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Controls ──────────────────────────────────────────────────── */
+#yt-lyrics-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+#yt-lyrics-controls button {
+  background: rgba(123, 97, 255, 0.12);
+  border: 1px solid rgba(123, 97, 255, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+#yt-lyrics-controls button:hover {
+  background: rgba(123, 97, 255, 0.3);
+  border-color: rgba(123, 97, 255, 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+#yt-lyrics-controls button:active {
+  transform: translateY(1px);
+  background: rgba(123, 97, 255, 0.5);
+}
+
+.yt-lyric-offset-display {
+  font-size: 10px;
+  font-weight: 700;
+  color: #7B61FF;
+  min-width: 32px;
+  text-align: center;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+/* ── Debug Panel (hidden unless debug mode on) ─────────────────── */
+#yt-lyrics-debug {
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.5);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  color: #4ade80;
+  border-bottom: 1px solid rgba(123, 97, 255, 0.1);
+  max-height: 110px;
+  overflow-y: auto;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+/* ── Lyrics Content Area ───────────────────────────────────────── */
+#yt-lyrics-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 20px 80px;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 88%, transparent 100%);
+}
+
+/* ── Lyric Lines ───────────────────────────────────────────────── */
+.yt-lyric-line {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 18px;
+  color: rgba(255, 255, 255, 0.28);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  transform-origin: center;
+  cursor: default;
+}
+
+.yt-lyric-active {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow:
+    0 0 24px rgba(123, 97, 255, 0.7),
+    0 0 48px rgba(123, 97, 255, 0.3);
+  transform: scale(1.04);
+  filter: none;
+}
+
+.yt-lyric-plain {
+  font-size: 15px;
+  line-height: 2;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+}
+
+.yt-lyrics-message {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 48px;
+  padding: 24px 20px;
+  line-height: 1.8;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+#yt-lyrics-content::-webkit-scrollbar { width: 3px; }
+#yt-lyrics-content::-webkit-scrollbar-track { background: transparent; }
+#yt-lyrics-content::-webkit-scrollbar-thumb {
+  background: rgba(123, 97, 255, 0.3);
+  border-radius: 3px;
+}
+#yt-lyrics-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 97, 255, 0.6);
+}

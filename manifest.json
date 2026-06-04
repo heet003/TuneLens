@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "TuneLens",
+  "version": "1.1.0",
+  "description": "Personal Music Intelligence for YouTube",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.lrclib.net/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "css": [
+        "styles/overlay.css"
+      ],
+      "js": [
+        "utils/logger.js",
+        "services/lrcParser.js",
+        "services/lyricsService.js",
+        "services/listeningTracker.js",
+        "content/youtubeDetector.js",
+        "content/videoObserver.js",
+        "content/lyricsOverlay.js",
+        "content/content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon64.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "TuneLens",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon64.png"
+    }
+  }
+}

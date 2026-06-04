@@ -1,0 +1,210 @@
+/* ═══════════════════════════════════════════════════════════════
+   Popup — Premium Dark Theme
+   Background: #0F1117, Cards: #161B22, Borders: #2A2F3A
+   Accent: #7B61FF, Text: #FFFFFF, Secondary: #A0A8B8
+   Font: Plus Jakarta Sans
+   ═══════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 300px;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  background: #0F1117;
+  color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  padding: 18px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #161B22;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(123, 97, 255, 0.2);
+  flex-shrink: 0;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+}
+
+/* ── Quick Stats ─────────────────────────────────────────────── */
+.quick-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat-box {
+  background: #161B22;
+  border: 1px solid #2A2F3A;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.stat-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #A0A8B8;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #7B61FF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Action Buttons ──────────────────────────────────────────── */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 11px 18px;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.1px;
+}
+
+.btn.primary {
+  background: #7B61FF;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(123, 97, 255, 0.3);
+}
+
+.btn.primary:hover {
+  background: #6B51EF;
+  box-shadow: 0 6px 20px rgba(123, 97, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn.primary:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 8px rgba(123, 97, 255, 0.4);
+}
+
+.btn.secondary {
+  background: transparent;
+  color: #7B61FF;
+  border: 1px solid rgba(123, 97, 255, 0.3);
+}
+
+.btn.secondary:hover {
+  background: rgba(123, 97, 255, 0.1);
+  border-color: #7B61FF;
+}
+
+/* ── Divider ─────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: #2A2F3A;
+}
+
+/* ── Settings Row ────────────────────────────────────────────── */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #A0A8B8;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #2A2F3A;
+  border-radius: 22px;
+  transition: 0.3s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: #A0A8B8;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+input:checked + .slider {
+  background: rgba(123, 97, 255, 0.3);
+}
+
+input:checked + .slider:before {
+  transform: translateX(18px);
+  background: #7B61FF;
+}
+
+/* ── Status ──────────────────────────────────────────────────── */
+.status {
+  font-size: 11px;
+  color: #7B61FF;
+  text-align: center;
+  min-height: 14px;
+  font-weight: 500;
+}
