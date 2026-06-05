@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TuneLens Analytics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="dashboard.css">
 </head>
+
 <body>
   <div class="dash-wrap">
 
@@ -16,7 +19,9 @@
     <div class="page-header">
       <div class="page-title">
         <div class="header-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+          </svg>
         </div>
         <div>
           <h1>TuneLens Analytics</h1>
@@ -24,6 +29,73 @@
         </div>
       </div>
     </div>
+
+    <!-- Persona & Identity Section -->
+    <section id="persona-section" style="display: none; margin-bottom: 24px;">
+      <!-- Hero Card -->
+      <div class="chart-card persona-hero accent">
+        <div class="persona-hero-content">
+          <div class="persona-artwork-wrap">
+            <img id="persona-illustration" class="persona-art" src="" alt="Persona Illustration" style="display: none;">
+            <div class="persona-icon" id="persona-icon">🎧</div>
+          </div>
+          <div class="persona-text">
+            <div class="persona-label-tag">Listening Persona</div>
+            <h2 id="persona-title">—</h2>
+            <p id="persona-story" class="persona-story">—</p>
+            <p id="persona-desc" style="display: none;">—</p>
+            
+            <div class="persona-why" id="persona-why-section" style="display: none;">
+              <h3 id="persona-why-title">Why you're this persona</h3>
+              <ul id="persona-why-list" class="persona-why-list"></ul>
+            </div>
+
+            <div class="trait-section">
+              <span class="trait-section-label">Secondary Traits</span>
+              <div class="persona-tags" id="persona-tags"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Horizontally Scrollable Insight Cards -->
+      <div class="horiz-scroll-cards" id="persona-insights">
+        <!-- JS will inject cards here -->
+      </div>
+    </section>
+
+    <!-- Relocated & Enhanced Mood Dashboard -->
+    <section class="chart-card mood-hero" id="mood-section" style="display: none; margin-bottom: 24px;">
+      <div class="chart-header">
+        <h2>Listening Mood</h2>
+        <span class="chart-badge">Vibe Analysis</span>
+      </div>
+      <div class="mood-hero-content">
+        <!-- Left Column: Mood Snapshot, Artwork, & Insight -->
+        <div class="mood-details-panel">
+          <div class="mood-artwork-wrap">
+            <img id="mood-illustration" class="mood-art" src="" alt="Mood Illustration" style="display: none;">
+            <div class="mood-fallback-icon" id="mood-icon">🔮</div>
+          </div>
+          <div class="mood-text">
+            <div class="mood-badge-label">Primary Vibe</div>
+            <h3 id="mood-primary-title">—</h3>
+            <p id="mood-summary" class="mood-summary">—</p>
+            <div class="mood-insight-box" id="mood-insight-container" style="display: none;">
+              <span class="insight-label">Weekly Insight</span>
+              <p id="mood-insight" class="mood-insight-text">—</p>
+            </div>
+          </div>
+        </div>
+        <!-- Right Column: Distribution stacked bar & progress meters -->
+        <div class="mood-distribution-panel">
+          <div class="distribution-label">Weekly Vibe Mix</div>
+          <div class="mood-stacked-bar" id="mood-stacked-bar"></div>
+          <div class="mood-bars-container" id="mood-distribution">
+            <!-- JS injects mood bars -->
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Overview Cards -->
     <section class="cards-grid">
@@ -165,6 +237,8 @@
       </div>
     </section>
 
+
+
     <!-- Top Stats -->
     <section class="grid-2-col">
       <div class="chart-card">
@@ -180,7 +254,7 @@
         <div id="songs-chart" class="css-chart"></div>
       </div>
     </section>
-    
+
     <!-- Tooltip container -->
     <div id="heatmap-tooltip" class="custom-tooltip" style="display:none;"></div>
 
@@ -188,4 +262,5 @@
   <script src="../services/analyticsEngine.js"></script>
   <script src="dashboard.js"></script>
 </body>
+
 </html>

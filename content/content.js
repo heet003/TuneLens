@@ -105,6 +105,13 @@
           'Lines': YTLyricsOverlay.parsedLyrics.length
         });
 
+        if (window.YTLyricsMoodEngine && lyricsData.plainLyrics) {
+          const moodScores = YTLyricsMoodEngine.analyzeLyrics(lyricsData.plainLyrics);
+          if (window.YTLyricsTracker) {
+            YTLyricsTracker.setSessionMood(moodScores);
+          }
+        }
+
         startSyncLoop();
       })
       .catch(error => {

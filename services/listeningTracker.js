@@ -40,6 +40,7 @@ const ListeningTracker = {
       endedAt: Date.now(),
       listenDuration: 0, // stored as integer seconds
       totalDuration: 0,  // Added for Replay Analytics
+      moodScores: null,  // Added for Mood Analysis
       date: new Date().toISOString().split('T')[0],
       url: window.location.href
     };
@@ -145,6 +146,13 @@ const ListeningTracker = {
       }
       this.saveSession();
     }, 5000);
+  },
+
+  setSessionMood: function (scores) {
+    if (this.currentSession) {
+      this.currentSession.moodScores = scores;
+      this.saveSession();
+    }
   },
 
   saveSession: function () {

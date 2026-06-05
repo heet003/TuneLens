@@ -23,6 +23,7 @@
         "services/lrcParser.js",
         "services/lyricsService.js",
         "services/listeningTracker.js",
+        "services/moodEngine.js",
         "content/youtubeDetector.js",
         "content/videoObserver.js",
         "content/lyricsOverlay.js",
