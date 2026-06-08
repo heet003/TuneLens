@@ -72,7 +72,7 @@ const AnalyticsEngine = {
     history.sort((a, b) => (a.startedAt || 0) - (b.startedAt || 0));
 
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // Time boundaries for discovery metrics
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -99,7 +99,7 @@ const AnalyticsEngine = {
 
       const startedAt = session.startedAt || new Date(session.date).getTime() || 0;
       const dateObj = new Date(startedAt);
-      const dateKey = session.date || dateObj.toISOString().split('T')[0];
+      const dateKey = session.date || `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
       const artist = (session.artist || 'Unknown').trim();
       const normArtist = artist.toLowerCase().replace(/\s+/g, ' ');

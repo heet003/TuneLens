@@ -181,7 +181,7 @@ function renderHeatmap(dailyStats) {
   }
 
   days.forEach(dateObj => {
-    const dateStr = dateObj.toISOString().split('T')[0];
+    const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
     const data = dailyStats[dateStr] || { time: 0, songs: { size: 0 }, artists: { size: 0 } };
 
     // Calculate level (0 min = 0, 1-10m = 1, 10-30m = 2, 30-60m = 3, 60+m = 4)

@@ -30,6 +30,9 @@ const ListeningTracker = {
   },
 
   _startTracking: function (videoInfo) {
+    const now = new Date();
+    const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     this.currentSession = {
       id: `${Date.now()}_${videoInfo.videoId}`,
       videoId: videoInfo.videoId,
@@ -41,7 +44,7 @@ const ListeningTracker = {
       listenDuration: 0, // stored as integer seconds
       totalDuration: 0,  // Added for Replay Analytics
       moodScores: null,  // Added for Mood Analysis
-      date: new Date().toISOString().split('T')[0],
+      date: localDateStr,
       url: window.location.href
     };
 
