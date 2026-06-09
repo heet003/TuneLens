@@ -87,13 +87,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     stats.secondaryTraits.forEach(trait => {
       const t = document.createElement('div');
       t.className = 'persona-tag';
-      
+
       const dot = document.createElement('span');
       dot.className = 'tag-indicator';
-      
+
       const label = document.createElement('span');
       label.innerText = trait;
-      
+
       t.appendChild(dot);
       t.appendChild(label);
       tagsContainer.appendChild(t);
@@ -165,6 +165,89 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Top Artists & Songs ───────────────────────────────────────
   renderTopList('artists-chart', stats.artists, (data) => data.time);
   renderTopList('songs-chart', stats.songs, (data) => data.time);
+  // ── AI Music Analysis Initialization ──────────────────────────
+  const aiDateRange = document.getElementById('ai-date-range');
+  const aiCustomDates = document.getElementById('ai-custom-dates');
+  const aiStartDate = document.getElementById('ai-start-date');
+  const aiEndDate = document.getElementById('ai-end-date');
+  const btnAnalyze = document.getElementById('btn-analyze');
+
+  const aiDefaultState = document.getElementById('ai-default-state');
+  const aiLoadingState = document.getElementById('ai-loading-state');
+  const aiErrorState = document.getElementById('ai-error-state');
+  const aiResultState = document.getElementById('ai-result-state');
+
+  aiDateRange.addEventListener('change', () => {
+    if (aiDateRange.value === 'custom') {
+      aiCustomDates.style.display = 'flex';
+    } else {
+      aiCustomDates.style.display = 'none';
+    }
+  });
+
+  btnAnalyze.addEventListener('click', async () => {
+    let startDateStr = null;
+    let endDateStr = null;
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+
+    if (aiDateRange.value === '7') {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+      startDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      endDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    } else if (aiDateRange.value === '30') {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+      startDateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      endDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    } else if (aiDateRange.value === 'custom') {
+      if (!aiStartDate.value || !aiEndDate.value) {
+        alert('Please select both start and end dates.');
+        return;
+      }
+      if (new Date(aiStartDate.value) > new Date(aiEndDate.value)) {
+        alert('Start date cannot be after end date.');
+        return;
+      }
+      startDateStr = aiStartDate.value;
+      endDateStr = aiEndDate.value;
+    }
+
+    aiDefaultState.style.display = 'none';
+    aiErrorState.style.display = 'none';
+    aiResultState.style.display = 'none';
+    aiLoadingState.style.display = 'flex';
+    btnAnalyze.disabled = true;
+
+    try {
+      const payload = await window.YTLyricsAnalytics.getAnalysisPayload(startDateStr, endDateStr);
+
+      if (!payload || payload.totalSessions === 0) {
+        throw new Error('No listening data found for this date range.');
+      }
+
+      const analysis = await window.YTLyricsAIService.generateMusicAnalysis(payload, startDateStr, endDateStr);
+
+      document.getElementById('ai-res-title').innerText = analysis.title;
+      document.getElementById('ai-res-conf').innerText = `${analysis.confidence}%`;
+      document.getElementById('ai-res-corePattern').innerText = analysis.corePattern;
+      document.getElementById('ai-res-hiddenConnection').innerText = analysis.hiddenConnection;
+      document.getElementById('ai-res-behavioralTension').innerText = analysis.behavioralTension;
+      document.getElementById('ai-res-surprisingInsight').innerText = analysis.surprisingInsight;
+      document.getElementById('ai-res-reflection').innerText = analysis.reflection;
+
+      aiLoadingState.style.display = 'none';
+      aiResultState.style.display = 'flex';
+
+    } catch (e) {
+      console.error('[AI_SERVICE] Error:', e);
+      document.getElementById('ai-error-text').innerText = e.message || 'Failed to generate analysis. Please try again.';
+      aiLoadingState.style.display = 'none';
+      aiErrorState.style.display = 'flex';
+    } finally {
+      btnAnalyze.disabled = false;
+    }
+  });
+
 });
 
 function renderHeatmap(dailyStats) {
@@ -290,41 +373,41 @@ function createBar(label, value, maxValue, rank) {
 
 function getPersonaDetails(persona) {
   const map = {
-    'Night Owl': { 
-      image: '../assets/illustrations/personas/night_owl.png', 
-      icon: '🌙', 
+    'Night Owl': {
+      image: '../assets/illustrations/personas/night_owl.png',
+      icon: '🌙',
       desc: 'You come alive after dark. Most of your listening happens when the world slows down.',
-      story: 'Your music sessions begin when most people are logging off for the day.' 
+      story: 'Your music sessions begin when most people are logging off for the day.'
     },
-    'Explorer': { 
-      image: '../assets/illustrations/personas/explorer.png', 
-      icon: '🧭', 
+    'Explorer': {
+      image: '../assets/illustrations/personas/explorer.png',
+      icon: '🧭',
       desc: 'Always searching for the next sound. You discover new tracks at a high rate.',
-      story: 'You rarely stay in one place. New artists and fresh discoveries drive most of your listening.' 
+      story: 'You rarely stay in one place. New artists and fresh discoveries drive most of your listening.'
     },
-    'Loop Addict': { 
-      image: '../assets/illustrations/personas/loop_addict.png', 
-      icon: '🔁', 
+    'Loop Addict': {
+      image: '../assets/illustrations/personas/loop_addict.png',
+      icon: '🔁',
       desc: 'When you find a song you like, you stay with it. High replay rates.',
-      story: 'When a song clicks, you lock it on repeat. You love getting lost in familiar rhythms.' 
+      story: 'When a song clicks, you lock it on repeat. You love getting lost in familiar rhythms.'
     },
-    'Deep Diver': { 
-      image: '../assets/illustrations/personas/deep_diver.png', 
-      icon: '🤿', 
+    'Deep Diver': {
+      image: '../assets/illustrations/personas/deep_diver.png',
+      icon: '🤿',
       desc: 'You immerse yourself. You rarely skip and finish what you start.',
-      story: 'You don\'t just sample music. You commit to complete listening experiences.' 
+      story: 'You don\'t just sample music. You commit to complete listening experiences.'
     },
-    'Weekend Warrior': { 
-      image: '../assets/illustrations/personas/weekend_warrior.png', 
-      icon: '🎉', 
+    'Weekend Warrior': {
+      image: '../assets/illustrations/personas/weekend_warrior.png',
+      icon: '🎉',
       desc: 'Your music peaks on the weekends. Saturday and Sunday are your jams.',
-      story: 'You save your energy for the weekend. Saturday and Sunday are your musical playground.' 
+      story: 'You save your energy for the weekend. Saturday and Sunday are your musical playground.'
     },
-    'Casual Hopper': { 
-      image: '../assets/illustrations/personas/casual_hopper.png', 
-      icon: '🐇', 
+    'Casual Hopper': {
+      image: '../assets/illustrations/personas/casual_hopper.png',
+      icon: '🐇',
       desc: 'You jump around. A lot of skipping and finding exactly the right vibe.',
-      story: 'You are always on the move. Skipping and searching for that exact perfect vibe.' 
+      story: 'You are always on the move. Skipping and searching for that exact perfect vibe.'
     }
   };
   return map[persona] || { icon: '🎧', desc: 'Your music, your rules.', story: 'You enjoy exploring unique sounds at your own pace.' };
@@ -432,8 +515,8 @@ function getMoodDetails(primary, secondary) {
   if (secondary) {
     desc = `A mix of ${primary} and ${secondary} sounds dominated your sessions.`;
   }
-  return { 
-    title: titles[primary] || 'Music Explorer', 
+  return {
+    title: titles[primary] || 'Music Explorer',
     desc,
     image: images[primary] || '',
     fallback: fallbacks[primary] || '🔮'
@@ -449,12 +532,12 @@ function getWeeklyMoodInsight(primaryMood, stats) {
     'romantic': "A warm, affectionate rhythm and gentle melodies filled your listening hours.",
     'aggressive': "Intense, heavy, and high-octane tracks powered your peak sessions."
   };
-  
+
   // Custom check for late-night listening
   if (stats.mostActiveHour !== null && (stats.mostActiveHour >= 22 || stats.mostActiveHour <= 4)) {
     return "Late-night listening strongly influenced this week's mood.";
   }
-  
+
   return insights[primaryMood] || "Your musical palette was rich, diverse, and well-balanced this week.";
 }
 

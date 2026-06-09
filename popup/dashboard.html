@@ -255,11 +255,98 @@
       </div>
     </section>
 
+    <!-- AI Music Analysis -->
+    <section class="chart-card ai-analysis-card">
+      <div class="chart-header ai-header">
+        <div>
+          <h2>AI Music Analysis</h2>
+          <p class="ai-subtitle">Discover patterns hidden in your listening habits.</p>
+        </div>
+        <div class="ai-controls">
+          <select id="ai-date-range" class="ai-select">
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          <div id="ai-custom-dates" class="ai-custom-dates" style="display: none;">
+            <input type="date" id="ai-start-date" class="ai-date-input">
+            <span class="ai-date-sep">to</span>
+            <input type="date" id="ai-end-date" class="ai-date-input">
+          </div>
+          <button id="btn-analyze" class="btn accent">Analyze My Listening</button>
+        </div>
+      </div>
+      
+      <div id="ai-content-area" class="ai-content-area">
+        <!-- Default State -->
+        <div id="ai-default-state" class="ai-state-box">
+          <div class="ai-icon-large">✨</div>
+          <p>Select a date range and click analyze to generate your personalized AI insights.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="ai-loading-state" class="ai-state-box" style="display: none;">
+          <div class="ai-skeleton title"></div>
+          <div class="ai-skeleton paragraph"></div>
+          <div class="ai-skeleton paragraph short" style="margin-bottom: 24px;"></div>
+          <div class="ai-res-grid-v2" style="width: 100%; opacity: 0.5;">
+            <div class="ai-skeleton box" style="height: 100px; width: 100%; border-radius: 12px;"></div>
+            <div class="ai-skeleton box" style="height: 100px; width: 100%; border-radius: 12px;"></div>
+            <div class="ai-skeleton box" style="height: 100px; width: 100%; border-radius: 12px;"></div>
+            <div class="ai-skeleton box" style="height: 100px; width: 100%; border-radius: 12px;"></div>
+          </div>
+          <p class="ai-loading-text" style="margin-top: 20px;">Connecting behavioral dots...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="ai-error-state" class="ai-state-box error" style="display: none;">
+          <div class="ai-icon-large">⚠️</div>
+          <p id="ai-error-text">Failed to generate analysis.</p>
+        </div>
+
+        <!-- Result State -->
+        <div id="ai-result-state" class="ai-result-layout" style="display: none;">
+          <div class="ai-result-header">
+            <h3 id="ai-res-title">—</h3>
+            <div class="ai-confidence">
+              <span class="ai-conf-label">Confidence</span>
+              <span id="ai-res-conf" class="ai-conf-val">—</span>
+            </div>
+          </div>
+          
+          <div class="ai-res-core">
+            <p id="ai-res-corePattern">—</p>
+          </div>
+          
+          <div class="ai-res-grid-v2">
+            <div class="ai-res-box">
+              <h4>Hidden Connection</h4>
+              <p id="ai-res-hiddenConnection">—</p>
+            </div>
+            <div class="ai-res-box tension">
+              <h4>Behavioral Tension</h4>
+              <p id="ai-res-behavioralTension">—</p>
+            </div>
+            <div class="ai-res-box highlight">
+              <h4>Surprising Insight</h4>
+              <p id="ai-res-surprisingInsight">—</p>
+            </div>
+            <div class="ai-res-box reflection">
+              <h4>Reflection</h4>
+              <p id="ai-res-reflection">—</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Tooltip container -->
     <div id="heatmap-tooltip" class="custom-tooltip" style="display:none;"></div>
 
   </div>
+  <script src="../env.js"></script>
   <script src="../services/analyticsEngine.js"></script>
+  <script src="../services/aiService.js"></script>
   <script src="dashboard.js"></script>
 </body>
 

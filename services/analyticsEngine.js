@@ -14,6 +14,94 @@ const AnalyticsEngine = {
 
   getStats: async function () {
     const history = await this.getHistory();
+    return this._calculateStats(history);
+  },
+
+  getAnalysisPayload: async function (startDateStr, endDateStr) {
+    let history = await this.getHistory();
+    if (!history || history.length === 0) return null;
+
+    // Filter by date range
+    let startMs = 0;
+    let endMs = Date.now();
+
+    if (startDateStr && endDateStr) {
+      const startObj = new Date(startDateStr);
+      startObj.setHours(0, 0, 0, 0);
+      startMs = startObj.getTime();
+
+      const endObj = new Date(endDateStr);
+      endObj.setHours(23, 59, 59, 999);
+      endMs = endObj.getTime();
+
+      history = history.filter(session => {
+        const startedAt = session.startedAt || new Date(session.date).getTime() || 0;
+        return startedAt >= startMs && startedAt <= endMs;
+      });
+    }
+
+    if (history.length === 0) return null;
+    const baseStats = this._calculateStats(history);
+
+    // Build advanced AI payload
+    const totalDaysAnalyzed = Math.max(1, Math.ceil((endMs - startMs) / (1000 * 60 * 60 * 24)));
+    
+    // Sort artists and songs by plays for concentration metrics
+    const sortedArtists = Object.entries(baseStats.artists).sort((a, b) => b[1].plays - a[1].plays);
+    const sortedSongs = Object.entries(baseStats.songs).sort((a, b) => b[1].plays - a[1].plays);
+
+    const topArtists = sortedArtists.slice(0, 5).map(a => ({ name: a[0], plays: a[1].plays, time: a[1].time }));
+    const topSongs = sortedSongs.slice(0, 5).map(s => ({ title: s[1].title, artist: s[1].artist, plays: s[1].plays, time: s[1].time }));
+
+    const mostReplayedArtist = topArtists.length > 0 ? topArtists[0] : null;
+    const mostReplayedSong = topSongs.length > 0 ? topSongs[0] : null;
+
+    // Daily extremes
+    let strongestListeningDay = null;
+    let weakestListeningDay = null;
+    let maxDayTime = -1;
+    let minDayTime = Infinity;
+    
+    for (const [date, data] of Object.entries(baseStats.daily)) {
+      if (data.time > maxDayTime) {
+        maxDayTime = data.time;
+        strongestListeningDay = date;
+      }
+      if (data.time < minDayTime) {
+        minDayTime = data.time;
+        weakestListeningDay = date;
+      }
+    }
+
+    return {
+      ...baseStats,
+      
+      // Enriched Listening Behavior
+      averageSessionLength: baseStats.totalSessions > 0 ? Math.round(baseStats.totalTime / baseStats.totalSessions) : 0,
+      listeningFrequency: Math.round(Object.keys(baseStats.daily).length / totalDaysAnalyzed * 100), // % of days active
+      
+      // Enriched Replay Intelligence
+      replayRate: baseStats.distinctSongsCount > 0 ? +(baseStats.totalSessions / baseStats.distinctSongsCount).toFixed(2) : 0,
+      mostReplayedArtist,
+      mostReplayedSong,
+
+      // Enriched Artist/Song
+      topArtists,
+      topSongs,
+      artistConcentration: baseStats.totalSessions > 0 && mostReplayedArtist ? Math.round((mostReplayedArtist.plays / baseStats.totalSessions) * 100) : 0,
+
+      // Enriched Heatmap
+      strongestListeningDay,
+      weakestListeningDay,
+
+      // Date Context
+      selectedStartDate: startDateStr,
+      selectedEndDate: endDateStr,
+      totalDaysAnalyzed
+    };
+  },
+
+  _calculateStats: function (history) {
     const stats = {
       // Basic
       totalTime: 0,

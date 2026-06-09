@@ -43,8 +43,22 @@ YouTube Page
        └──> listeningTracker.js (Wall-clock tracking logic)
 ```
 
-## 🛠️ Installation Instructions
+## 🛠️ Installation & Setup
 
+### 1. Configure Gemini AI API (Required for AI Analysis)
+The "AI Music Analysis" feature utilizes the Google Gemini API to generate behavioral insights.
+You must configure your API key before the feature will work.
+
+1. Create a new file named `env.js` in the root directory of the extension (`tunelens/env.js`).
+2. Add the following code, replacing `YOUR_API_KEY` with your actual Gemini API key:
+   ```javascript
+   window.ENV = {
+     GEMINI_API_KEY: "YOUR_API_KEY"
+   };
+   ```
+   *Note: `env.js` is ignored by git to keep your key secure.*
+
+### 2. Install the Extension
 1. Open Google Chrome.
 2. Navigate to `chrome://extensions/` in your URL bar.
 3. Enable the **Developer mode** toggle in the top right corner.
