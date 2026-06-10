@@ -44,6 +44,9 @@ const ListeningTracker = {
       listenDuration: 0, // stored as integer seconds
       totalDuration: 0,  // Added for Replay Analytics
       moodScores: null,  // Added for Mood Analysis
+      metadataSource: 'YOUTUBE_RAW',
+      normalizedTitle: videoInfo.title,
+      normalizedArtist: videoInfo.channel || 'Unknown',
       date: localDateStr,
       url: window.location.href
     };
@@ -154,6 +157,22 @@ const ListeningTracker = {
   setSessionMood: function (scores) {
     if (this.currentSession) {
       this.currentSession.moodScores = scores;
+      this.saveSession();
+    }
+  },
+
+  updateSessionMetadata: function (metadata) {
+    if (this.currentSession && metadata) {
+      if (metadata.title) {
+        this.currentSession.title = metadata.title;
+        this.currentSession.normalizedTitle = metadata.title;
+      }
+      if (metadata.artist) {
+        this.currentSession.artist = metadata.artist;
+        this.currentSession.normalizedArtist = metadata.artist;
+      }
+      this.currentSession.metadataSource = 'LRCLIB_VERIFIED';
+      YTLyricsLogger.log('[MUSIC-ANALYTICS] Session metadata updated from LRCLIB:', this.currentSession.title, '-', this.currentSession.artist);
       this.saveSession();
     }
   },

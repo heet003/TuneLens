@@ -5,7 +5,11 @@
    Font: Plus Jakarta Sans
    ═══════════════════════════════════════════════════════════════ */
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
@@ -204,6 +208,24 @@ h1 {
 
 .history-table td.td-artist {
   color: #A0A8B8;
+}
+
+.history-table td.td-vibe {
+  white-space: nowrap;
+}
+
+.vibe-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #A0A8B8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .history-table td.td-duration {

@@ -23,9 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const q = e.target.value.toLowerCase().trim();
     filteredHistory = q
       ? allHistory.filter(h =>
-          (h.title && h.title.toLowerCase().includes(q)) ||
-          (h.artist && h.artist.toLowerCase().includes(q))
-        )
+        (h.title && h.title.toLowerCase().includes(q)) ||
+        (h.artist && h.artist.toLowerCase().includes(q))
+      )
       : [...allHistory];
     currentPage = 1;
     renderTable();
@@ -78,10 +78,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+const MOOD_MAPPING = {
+  'reflective': 'Deep & Thoughtful',
+  'melancholic': 'Melancholic',
+  'energetic': 'Energetic',
+  'happy': 'Upbeat',
+  'romantic': 'Romantic',
+  'aggressive': 'High Energy'
+};
+
+function getPrimarySessionMood(scores) {
+  if (!scores) return null;
+  let maxScore = -1;
+  let topMood = null;
+  for (const [mood, score] of Object.entries(scores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      topMood = mood;
+    }
+  }
+  return maxScore > 0 ? topMood : null;
+}
+
+function getMoodBadgeHTML(mood) {
+  if (!mood || !MOOD_MAPPING[mood]) {
+    return ``;
+  }
+  return `<span class="vibe-badge vibe-${mood}">${MOOD_MAPPING[mood]}</span>`;
+}
+
 function updateRecordCount() {
   const countEl = document.getElementById('record-count');
   if (countEl) {
-    countEl.innerText = `${allHistory.length} sessions recorded`;
+    let summaryText = `${allHistory.length} sessions recorded`;
+
+    // Append Top Mood
+    if (allHistory.length > 0 && window.YTLyricsAnalytics) {
+      const stats = window.YTLyricsAnalytics._calculateStats(allHistory);
+      if (stats.primaryMood) {
+        const percent = stats.moodDistribution[stats.primaryMood] || 0;
+        const moodLabel = MOOD_MAPPING[stats.primaryMood] || stats.primaryMood;
+        summaryText += ` • Top Mood: ${moodLabel} (${percent}%)`;
+      }
+    }
+
+    countEl.innerText = summaryText;
   }
 }
 
@@ -110,10 +151,13 @@ function renderTable() {
       ? new Date(item.startedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
       : item.date || '—';
 
+    const sessionMood = getPrimarySessionMood(item.moodScores);
+
     tr.innerHTML = `
       <td>${dt}</td>
       <td class="td-song" title="${escapeHtml(item.title || '')}">${escapeHtml(item.title || 'Unknown')}</td>
       <td class="td-artist">${escapeHtml(item.artist || 'Unknown')}</td>
+      <td class="td-vibe">${getMoodBadgeHTML(sessionMood)}</td>
       <td class="td-duration">${window.YTLyricsAnalytics.formatDuration(item.listenDuration)}</td>
       <td>${item.url ? `<a href="${item.url}" target="_blank">Open ↗</a>` : '—'}</td>
     `;

@@ -55,17 +55,16 @@
     // Step 2: RESET all stale state immediately (Bug 1 & 4 Fix)
     YTLyricsOverlay.reset(videoInfo.videoId);
 
-    // Step 3: Extract clean query params
-    let queryTitle = YTLyricsDetector.cleanTitle(videoInfo.title || '');
+    // Step 3: Extract clean query params using Metadata Intelligence Layer
+    let queryTitle = videoInfo.title || '';
     let queryArtist = videoInfo.channel || '';
 
-    // If title has "Artist - Song" pattern, split it
-    if (queryTitle.includes(' - ')) {
-      const parts = queryTitle.split(' - ');
-      if (parts.length >= 2) {
-        queryArtist = parts[0].trim();
-        queryTitle = parts.slice(1).join(' - ').trim();
-      }
+    if (window.YTLyricsMetadataInt) {
+      const candidates = window.YTLyricsMetadataInt.extractCandidates(queryTitle, queryArtist);
+      queryTitle = candidates.candidateTitle;
+      queryArtist = candidates.candidateArtist;
+    } else {
+      queryTitle = YTLyricsDetector.cleanTitle(queryTitle);
     }
 
     // Step 4: ALWAYS show song name in header immediately (Bug 5 Fix)
@@ -104,6 +103,14 @@
           'API Time': fetchMs + 'ms',
           'Lines': YTLyricsOverlay.parsedLyrics.length
         });
+
+        if (window.YTLyricsTracker) {
+          // Update tracker with verified metadata from LRCLIB
+          YTLyricsTracker.updateSessionMetadata({
+            title: lyricsData.title,
+            artist: lyricsData.artist
+          });
+        }
 
         if (window.YTLyricsMoodEngine && lyricsData.plainLyrics) {
           const moodScores = YTLyricsMoodEngine.analyzeLyrics(lyricsData.plainLyrics);

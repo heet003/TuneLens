@@ -256,10 +256,14 @@ function renderHeatmap(dailyStats) {
   container.innerHTML = '';
 
   const now = new Date();
-  // Generate last 7 days array ending today
+  // Generate ISO calendar week array (Monday to Sunday)
   const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+  const dayOfWeek = now.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const mondayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mondayDate.getFullYear(), mondayDate.getMonth(), mondayDate.getDate() + i);
     days.push(d);
   }
 

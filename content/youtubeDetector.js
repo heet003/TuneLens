@@ -46,6 +46,16 @@ const YouTubeDetector = {
                        .replace(/\(lyric.*?\)/i, '')
                        .replace(/\[lyric.*?\]/i, '')
                        .replace(/\(music video\)/i, '')
+                       .replace(/\(video.*?\)/i, '')
+                       .replace(/\[video.*?\]/i, '')
+                       .replace(/\(hd.*?\)/i, '')
+                       .replace(/\[hd.*?\]/i, '')
+                       .replace(/\(4k.*?\)/i, '')
+                       .replace(/\[4k.*?\]/i, '')
+                       .replace(/\(audio.*?\)/i, '')
+                       .replace(/\[audio.*?\]/i, '')
+                       .replace(/\(visualizer.*?\)/i, '')
+                       .replace(/\[visualizer.*?\]/i, '')
                        .replace(/ft\..*/i, '')
                        .replace(/feat\..*/i, '');
     return cleaned.trim();

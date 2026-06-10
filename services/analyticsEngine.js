@@ -45,7 +45,7 @@ const AnalyticsEngine = {
 
     // Build advanced AI payload
     const totalDaysAnalyzed = Math.max(1, Math.ceil((endMs - startMs) / (1000 * 60 * 60 * 24)));
-    
+
     // Sort artists and songs by plays for concentration metrics
     const sortedArtists = Object.entries(baseStats.artists).sort((a, b) => b[1].plays - a[1].plays);
     const sortedSongs = Object.entries(baseStats.songs).sort((a, b) => b[1].plays - a[1].plays);
@@ -61,7 +61,7 @@ const AnalyticsEngine = {
     let weakestListeningDay = null;
     let maxDayTime = -1;
     let minDayTime = Infinity;
-    
+
     for (const [date, data] of Object.entries(baseStats.daily)) {
       if (data.time > maxDayTime) {
         maxDayTime = data.time;
@@ -75,11 +75,11 @@ const AnalyticsEngine = {
 
     return {
       ...baseStats,
-      
+
       // Enriched Listening Behavior
       averageSessionLength: baseStats.totalSessions > 0 ? Math.round(baseStats.totalTime / baseStats.totalSessions) : 0,
       listeningFrequency: Math.round(Object.keys(baseStats.daily).length / totalDaysAnalyzed * 100), // % of days active
-      
+
       // Enriched Replay Intelligence
       replayRate: baseStats.distinctSongsCount > 0 ? +(baseStats.totalSessions / baseStats.distinctSongsCount).toFixed(2) : 0,
       mostReplayedArtist,
@@ -99,6 +99,32 @@ const AnalyticsEngine = {
       selectedEndDate: endDateStr,
       totalDaysAnalyzed
     };
+  },
+
+  _generateCanonicalIdentity: function (title, artist) {
+    if (!title) title = 'unknown';
+    if (!artist) artist = 'unknown';
+
+    let cleanTitle = title.toLowerCase()
+      .replace(/\(official.*?\)/i, '')
+      .replace(/\[official.*?\]/i, '')
+      .replace(/\(lyric.*?\)/i, '')
+      .replace(/\[lyric.*?\]/i, '')
+      .replace(/\(music video\)/i, '')
+      .replace(/\(live.*?\)/i, '')
+      .replace(/\[live.*?\]/i, '')
+      .replace(/\(audio.*?\)/i, '')
+      .replace(/\[audio.*?\]/i, '')
+      .replace(/ft\..*/i, '')
+      .replace(/feat\..*/i, '')
+      .replace(/[^a-z0-9]/g, '');
+
+    let cleanArtist = artist.toLowerCase()
+      .replace(/ft\..*/i, '')
+      .replace(/feat\..*/i, '')
+      .replace(/[^a-z0-9]/g, '');
+
+    return `${cleanTitle}__${cleanArtist}`;
   },
 
   _calculateStats: function (history) {
@@ -191,7 +217,7 @@ const AnalyticsEngine = {
 
       const artist = (session.artist || 'Unknown').trim();
       const normArtist = artist.toLowerCase().replace(/\s+/g, ' ');
-      const videoId = session.videoId || `${session.title}__${artist}`;
+      const canonicalId = this._generateCanonicalIdentity(session.title, session.artist);
 
       // ── Replay Analytics ──────────────────────────────────────
       if (session.totalDuration && session.totalDuration > 0 && !isNaN(session.totalDuration)) {
@@ -207,8 +233,8 @@ const AnalyticsEngine = {
       }
 
       // ── Discovery Metrics ─────────────────────────────────────
-      if (!firstSeenSong.has(videoId)) {
-        firstSeenSong.set(videoId, startedAt);
+      if (!firstSeenSong.has(canonicalId)) {
+        firstSeenSong.set(canonicalId, startedAt);
         if (startedAt >= startOfToday) stats.newSongsToday++;
         if (startedAt >= startOfWeek) stats.newSongsThisWeek++;
         if (startedAt >= startOfMonth) stats.newSongsThisMonth++;
@@ -262,23 +288,23 @@ const AnalyticsEngine = {
 
       if (!stats.daily[dateKey]) stats.daily[dateKey] = { time: 0, songs: new Set(), artists: new Set() };
       stats.daily[dateKey].time += dur;
-      stats.daily[dateKey].songs.add(videoId);
+      stats.daily[dateKey].songs.add(canonicalId);
       if (artist !== 'Unknown') stats.daily[dateKey].artists.add(artist);
 
       if (!stats.artists[artist]) stats.artists[artist] = { time: 0, plays: 0 };
       stats.artists[artist].time += dur;
       stats.artists[artist].plays++;
 
-      if (!stats.songs[videoId]) {
-        stats.songs[videoId] = {
+      if (!stats.songs[canonicalId]) {
+        stats.songs[canonicalId] = {
           title: session.title || 'Unknown',
           artist: artist,
           time: 0,
           plays: 0
         };
       }
-      stats.songs[videoId].time += dur;
-      stats.songs[videoId].plays++;
+      stats.songs[canonicalId].time += dur;
+      stats.songs[canonicalId].plays++;
     });
 
     // ── Post Processing ─────────────────────────────────────────
