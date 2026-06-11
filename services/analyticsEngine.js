@@ -105,24 +105,10 @@ const AnalyticsEngine = {
     if (!title) title = 'unknown';
     if (!artist) artist = 'unknown';
 
-    let cleanTitle = title.toLowerCase()
-      .replace(/\(official.*?\)/i, '')
-      .replace(/\[official.*?\]/i, '')
-      .replace(/\(lyric.*?\)/i, '')
-      .replace(/\[lyric.*?\]/i, '')
-      .replace(/\(music video\)/i, '')
-      .replace(/\(live.*?\)/i, '')
-      .replace(/\[live.*?\]/i, '')
-      .replace(/\(audio.*?\)/i, '')
-      .replace(/\[audio.*?\]/i, '')
-      .replace(/ft\..*/i, '')
-      .replace(/feat\..*/i, '')
-      .replace(/[^a-z0-9]/g, '');
-
-    let cleanArtist = artist.toLowerCase()
-      .replace(/ft\..*/i, '')
-      .replace(/feat\..*/i, '')
-      .replace(/[^a-z0-9]/g, '');
+    // Input should already be cleaned by MetadataIntelligence.
+    // Strip non-alphanumeric only for deduplication keying.
+    const cleanTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanArtist = artist.toLowerCase().replace(/[^a-z0-9]/g, '');
 
     return `${cleanTitle}__${cleanArtist}`;
   },
@@ -227,10 +213,8 @@ const AnalyticsEngine = {
         if (completionPct >= 0.8) stats.completedPlays++;
         else if (completionPct <= 0.3) stats.skippedPlays++;
         else stats.partialPlays++;
-      } else {
-        // Fallback for legacy records without totalDuration
-        stats.partialPlays++;
       }
+      // Legacy sessions (totalDuration = 0) are excluded from completion stats entirely
 
       // ── Discovery Metrics ─────────────────────────────────────
       if (!firstSeenSong.has(canonicalId)) {

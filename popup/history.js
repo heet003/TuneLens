@@ -100,6 +100,16 @@ function getPrimarySessionMood(scores) {
   return maxScore > 0 ? topMood : null;
 }
 
+function getConfidenceBadgeHTML(metadataSource) {
+  if (metadataSource === 'LRCLIB_VERIFIED') {
+    return `<span class="confidence-badge verified" title="Metadata verified by LRCLIB">✓ Verified</span>`;
+  }
+  if (metadataSource === 'LRCLIB_AMBIGUOUS') {
+    return `<span class="confidence-badge ambiguous" title="Low-confidence match — metadata may be inaccurate">? Uncertain</span>`;
+  }
+  return ''; // YOUTUBE_RAW or legacy — show nothing
+}
+
 function getMoodBadgeHTML(mood) {
   if (!mood || !MOOD_MAPPING[mood]) {
     return ``;
@@ -152,11 +162,12 @@ function renderTable() {
       : item.date || '—';
 
     const sessionMood = getPrimarySessionMood(item.moodScores);
+    const confidenceBadge = getConfidenceBadgeHTML(item.metadataSource);
 
     tr.innerHTML = `
       <td>${dt}</td>
       <td class="td-song" title="${escapeHtml(item.title || '')}">${escapeHtml(item.title || 'Unknown')}</td>
-      <td class="td-artist">${escapeHtml(item.artist || 'Unknown')}</td>
+      <td class="td-artist">${escapeHtml(item.artist || 'Unknown')}${confidenceBadge}</td>
       <td class="td-vibe">${getMoodBadgeHTML(sessionMood)}</td>
       <td class="td-duration">${window.YTLyricsAnalytics.formatDuration(item.listenDuration)}</td>
       <td>${item.url ? `<a href="${item.url}" target="_blank">Open ↗</a>` : '—'}</td>

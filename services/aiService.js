@@ -41,8 +41,8 @@ const AIService = {
   /**
    * Generate an analysis payload string cache key
    */
-  _generateCacheKey: function (startDate, endDate, totalTime, totalSessions) {
-    return `ai_analysis_v3_${startDate}_${endDate}_${totalTime}_${totalSessions}`;
+  _generateCacheKey: function (startDate, endDate, totalTime, totalSessions, verifiedSessions) {
+    return `ai_analysis_v4_${startDate}_${endDate}_${totalTime}_${totalSessions}_v${verifiedSessions || 0}`;
   },
 
   /**

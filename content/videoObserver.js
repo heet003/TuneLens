@@ -11,7 +11,7 @@ const VideoObserver = {
   _videoEndedListener: null,
   _pollingTimeout: null,
 
-  init: function(callback) {
+  init: function (callback) {
     this.onVideoChangeCallback = callback;
     YTLyricsLogger.log('Initializing Video Observer');
 
@@ -23,7 +23,7 @@ const VideoObserver = {
       YTLyricsLogger.log('yt-navigate-finish fired, checking state...');
       this.checkVideoState();
     });
-    
+
     window.addEventListener('yt-page-data-updated', () => {
       YTLyricsLogger.log('yt-page-data-updated fired, checking state...');
       this.checkVideoState();
@@ -33,7 +33,7 @@ const VideoObserver = {
     setInterval(() => this.checkVideoState(), 2000);
   },
 
-  checkVideoState: function() {
+  checkVideoState: function () {
     if (!window.location.pathname.startsWith('/watch')) {
       if (window.YTLyricsOverlay) YTLyricsOverlay.hide();
       return;
@@ -43,18 +43,18 @@ const VideoObserver = {
     if (newVideoId && newVideoId !== this.currentVideoId) {
       const oldId = this.currentVideoId;
       this.currentVideoId = newVideoId;
-      
+
       YTLyricsLogger.log('Video changed in URL', { oldId, newId: newVideoId });
 
       // Attach 'ended' listener to new video element for autoplay detection
       this._attachVideoEndedListener(newVideoId);
-      
+
       // Start polling for the DOM to update
       this._waitForDOMUpdate(newVideoId);
     }
   },
 
-  _waitForDOMUpdate: function(targetVideoId, attempts = 0) {
+  _waitForDOMUpdate: function (targetVideoId, attempts = 0) {
     if (this._pollingTimeout) clearTimeout(this._pollingTimeout);
 
     const title = YTLyricsDetector.getTitle();
@@ -68,9 +68,9 @@ const VideoObserver = {
 
     if (isReady) {
       this.previousTitle = title; // Lock in the new title
-      
+
       YTLyricsLogger.log('DOM Ready, dispatching video change:', { targetVideoId, title, channel });
-      
+
       if (this.onVideoChangeCallback) {
         this.onVideoChangeCallback({
           videoId: targetVideoId,
@@ -89,7 +89,7 @@ const VideoObserver = {
     }
   },
 
-  _attachVideoEndedListener: function(videoId) {
+  _attachVideoEndedListener: function (videoId) {
     // Remove any previous ended listener to prevent duplicates
     if (this._videoEndedListener) {
       const oldVideo = document.querySelector('video.html5-main-video');

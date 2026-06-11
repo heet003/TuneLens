@@ -49,9 +49,22 @@ const MetadataIntelligence = {
   },
 
   isToxicString: function (str) {
-    const invalidKeywords = ['vevo', 'topic', 'records', 'lyrics', 'official', 't-series', 'wfl', 'worldfamouslyrics', 'music', 'channel', 'entertainment', 'trailer', 'teaser'];
-    const lower = str.toLowerCase();
-    return invalidKeywords.some(kw => lower.includes(kw));
+    if (!str) return true;
+    const lower = str.toLowerCase().trim();
+
+    // Exact or suffix matches for known aggregator/label channel patterns
+    const exactToxic = ['vevo', 'topic', 'wfl', 'worldfamouslyrics', 'lyricworld', 'lyricsvideo'];
+    if (exactToxic.includes(lower)) return true;
+
+    // Suffix patterns — e.g. "SonyMusicIndia" or "T-SeriesOfficial"
+    const suffixToxic = ['vevo', 'official', 'records', 'lyrics'];
+    if (suffixToxic.some(s => lower.endsWith(s))) return true;
+
+    // Multi-word phrase matches for major label channels
+    const phraseToxic = ['t-series', 'sony music', 'times music', 'zee music', 'saregama', 'tips music', 'speed records', 'desi music factory', 'tseries'];
+    if (phraseToxic.some(p => lower.includes(p))) return true;
+
+    return false;
   }
 };
 

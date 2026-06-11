@@ -3,15 +3,15 @@
  * Handles extraction of video info from YouTube's dynamic DOM.
  */
 const YouTubeDetector = {
-  getVideoId: function() {
+  getVideoId: function () {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('v');
   },
-  
-  getTitle: function() {
-    const titleEl = document.querySelector('h1.ytd-watch-metadata yt-formatted-string') || 
-                    document.querySelector('h1.title yt-formatted-string') ||
-                    document.querySelector('#title h1 yt-formatted-string');
+
+  getTitle: function () {
+    const titleEl = document.querySelector('h1.ytd-watch-metadata yt-formatted-string') ||
+      document.querySelector('h1.title yt-formatted-string') ||
+      document.querySelector('#title h1 yt-formatted-string');
     if (titleEl && titleEl.textContent) {
       return titleEl.textContent;
     }
@@ -23,41 +23,41 @@ const YouTubeDetector = {
       docTitle = docTitle.replace(/^\(\d+\)\s*/, '');
       if (docTitle && docTitle !== 'YouTube') return docTitle;
     }
-    
+
     return null;
   },
 
-  getChannelName: function() {
-    const channelEl = document.querySelector('ytd-channel-name yt-formatted-string a') || 
-                      document.querySelector('#upload-info #channel-name a') ||
-                      document.querySelector('ytd-video-owner-renderer a.yt-simple-endpoint');
+  getChannelName: function () {
+    const channelEl = document.querySelector('ytd-channel-name yt-formatted-string a') ||
+      document.querySelector('#upload-info #channel-name a') ||
+      document.querySelector('ytd-video-owner-renderer a.yt-simple-endpoint');
     return channelEl ? channelEl.textContent : null;
   },
 
-  getCurrentTime: function() {
+  getCurrentTime: function () {
     const videoElement = document.querySelector('video.html5-main-video');
     return videoElement ? videoElement.currentTime : 0;
   },
-  
-  cleanTitle: function(title) {
+
+  cleanTitle: function (title) {
     if (!title) return '';
     let cleaned = title.replace(/\(official.*?\)/i, '')
-                       .replace(/\[official.*?\]/i, '')
-                       .replace(/\(lyric.*?\)/i, '')
-                       .replace(/\[lyric.*?\]/i, '')
-                       .replace(/\(music video\)/i, '')
-                       .replace(/\(video.*?\)/i, '')
-                       .replace(/\[video.*?\]/i, '')
-                       .replace(/\(hd.*?\)/i, '')
-                       .replace(/\[hd.*?\]/i, '')
-                       .replace(/\(4k.*?\)/i, '')
-                       .replace(/\[4k.*?\]/i, '')
-                       .replace(/\(audio.*?\)/i, '')
-                       .replace(/\[audio.*?\]/i, '')
-                       .replace(/\(visualizer.*?\)/i, '')
-                       .replace(/\[visualizer.*?\]/i, '')
-                       .replace(/ft\..*/i, '')
-                       .replace(/feat\..*/i, '');
+      .replace(/\[official.*?\]/i, '')
+      .replace(/\(lyric.*?\)/i, '')
+      .replace(/\[lyric.*?\]/i, '')
+      .replace(/\(music video\)/i, '')
+      .replace(/\(video.*?\)/i, '')
+      .replace(/\[video.*?\]/i, '')
+      .replace(/\(hd.*?\)/i, '')
+      .replace(/\[hd.*?\]/i, '')
+      .replace(/\(4k.*?\)/i, '')
+      .replace(/\[4k.*?\]/i, '')
+      .replace(/\(audio.*?\)/i, '')
+      .replace(/\[audio.*?\]/i, '')
+      .replace(/\(visualizer.*?\)/i, '')
+      .replace(/\[visualizer.*?\]/i, '')
+      .replace(/ft\..*/i, '')
+      .replace(/feat\..*/i, '');
     return cleaned.trim();
   }
 };

@@ -45,8 +45,16 @@
     }, 500);
   }
 
+  // Cancellation token: tracks the most recently requested video.
+  // Any LRCLIB response from a superseded video is silently discarded.
+  let activeVideoId = null;
+
   function handleVideoChange(videoInfo) {
     YTLyricsLogger.success('New video detected:', videoInfo);
+
+    // Update the cancellation token FIRST before any async work
+    activeVideoId = videoInfo.videoId;
+    const myVideoId = videoInfo.videoId;
 
     // Step 1: Build DOM if not yet built, then show
     YTLyricsOverlay.init();
@@ -68,7 +76,6 @@
     }
 
     // Step 4: ALWAYS show song name in header immediately (Bug 5 Fix)
-    // Use cleaned title and extracted artist so header is populated before API call
     YTLyricsOverlay.setSongMeta(
       queryTitle || videoInfo.title || 'Unknown Song',
       queryArtist || videoInfo.channel || ''
@@ -94,25 +101,42 @@
     const fetchStart = performance.now();
     YTLyricsService.searchLyrics(queryTitle, queryArtist)
       .then(lyricsData => {
-        const fetchMs = (performance.now() - fetchStart).toFixed(0);
-        YTLyricsLogger.success('Lyrics found!', lyricsData.title, 'by', lyricsData.artist);
+        // Race condition guard: if the user navigated away, discard this stale response
+        if (activeVideoId !== myVideoId) {
+          YTLyricsLogger.warn('[Content] Stale LRCLIB response discarded for video:', myVideoId);
+          return;
+        }
 
+        const fetchMs = (performance.now() - fetchStart).toFixed(0);
+        YTLyricsLogger.success('Lyrics found!', lyricsData.title, 'by', lyricsData.artist,
+          `| confidence: ${lyricsData.confidence} | verified: ${lyricsData.isVerified}`);
+
+        // Always display lyrics in the overlay regardless of confidence
         YTLyricsOverlay.displayLyrics(lyricsData);
         YTLyricsOverlay.updateDebugInfo({
-          'Status': 'Syncing',
+          'Status': lyricsData.isVerified ? 'Syncing (Verified)' : 'Syncing (Ambiguous)',
           'API Time': fetchMs + 'ms',
+          'Confidence': lyricsData.confidence,
           'Lines': YTLyricsOverlay.parsedLyrics.length
         });
 
+        // Only update persistent session metadata when confidence is sufficient
         if (window.YTLyricsTracker) {
-          // Update tracker with verified metadata from LRCLIB
-          YTLyricsTracker.updateSessionMetadata({
-            title: lyricsData.title,
-            artist: lyricsData.artist
-          });
+          if (lyricsData.isVerified) {
+            YTLyricsTracker.updateSessionMetadata({
+              title: lyricsData.title,
+              artist: lyricsData.artist,
+              confidence: lyricsData.confidence
+            });
+          } else {
+            // Mark session as LRCLIB_AMBIGUOUS without overwriting title/artist
+            YTLyricsTracker.markSessionAmbiguous(lyricsData.confidence);
+            YTLyricsLogger.warn('[Content] AMBIGUOUS match — lyrics shown but metadata preserved:', lyricsData.title, 'vs', queryTitle);
+          }
         }
 
-        if (window.YTLyricsMoodEngine && lyricsData.plainLyrics) {
+        // Mood analysis: run on verified metadata or high-confidence ambiguous results
+        if ((lyricsData.isVerified || lyricsData.confidence >= 60) && window.YTLyricsMoodEngine && lyricsData.plainLyrics) {
           const moodScores = YTLyricsMoodEngine.analyzeLyrics(lyricsData.plainLyrics);
           if (window.YTLyricsTracker) {
             YTLyricsTracker.setSessionMood(moodScores);
@@ -122,9 +146,10 @@
         startSyncLoop();
       })
       .catch(error => {
-        YTLyricsLogger.error('Lyrics fetch failed:', error.message);
+        // Race condition guard
+        if (activeVideoId !== myVideoId) return;
 
-        // Bug 5 Fix: header already shows correct title — just update lyrics area
+        YTLyricsLogger.error('Lyrics fetch failed:', error.message);
         YTLyricsOverlay.displayMessage(
           `<span style="font-size:15px">Lyrics not found</span><br>
            <small style="opacity:0.6">${error.message}</small>`

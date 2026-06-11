@@ -45,6 +45,7 @@ const ListeningTracker = {
       totalDuration: 0,  // Added for Replay Analytics
       moodScores: null,  // Added for Mood Analysis
       metadataSource: 'YOUTUBE_RAW',
+      metadataConfidence: 0,
       normalizedTitle: videoInfo.title,
       normalizedArtist: videoInfo.channel || 'Unknown',
       date: localDateStr,
@@ -172,7 +173,17 @@ const ListeningTracker = {
         this.currentSession.normalizedArtist = metadata.artist;
       }
       this.currentSession.metadataSource = 'LRCLIB_VERIFIED';
-      YTLyricsLogger.log('[MUSIC-ANALYTICS] Session metadata updated from LRCLIB:', this.currentSession.title, '-', this.currentSession.artist);
+      this.currentSession.metadataConfidence = metadata.confidence || 100;
+      YTLyricsLogger.log('[MUSIC-ANALYTICS] Session metadata verified from LRCLIB:', this.currentSession.title, '-', this.currentSession.artist, `(confidence: ${this.currentSession.metadataConfidence})`);
+      this.saveSession();
+    }
+  },
+
+  markSessionAmbiguous: function (confidence) {
+    if (this.currentSession) {
+      this.currentSession.metadataSource = 'LRCLIB_AMBIGUOUS';
+      this.currentSession.metadataConfidence = confidence || 0;
+      YTLyricsLogger.warn('[MUSIC-ANALYTICS] Session marked AMBIGUOUS — metadata NOT overwritten. Confidence:', confidence);
       this.saveSession();
     }
   },
