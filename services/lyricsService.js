@@ -29,9 +29,13 @@ const LyricsService = {
 
   /**
    * Score a candidate LRCLIB track against our query.
-   * Returns 0-100 confidence score. 0 means hard reject.
+   * Returns { score: 0-100, artistValidated: bool }. score=0 means hard reject.
+   *
+   * channelContext = { channelType, channelConfidence } from MetadataIntelligence.
+   * Topic/VEVO channels lower the artist validation threshold (artist from channel is high-trust).
    */
-  _scoreResult: function (track, queryTitle, queryArtist) {
+  _scoreResult: function (track, queryTitle, queryArtist, channelContext) {
+    channelContext = channelContext || {};
     if (!track || !track.trackName) return { score: 0, artistValidated: false };
 
     let score = 0;
@@ -46,18 +50,29 @@ const LyricsService = {
     // Artist cross-validation
     if (queryArtist) {
       const artistOverlap = this._wordOverlap(track.artistName, queryArtist);
+      // Topic/VEVO channels have pre-validated artist — lower validation threshold
+      const isHighTrustChannel = channelContext.channelType === 'TOPIC_AUTO' ||
+                                  channelContext.channelType === 'VEVO';
+      const validationThreshold = isHighTrustChannel ? 0.2 : 0.3;
+
       if (artistOverlap >= 0.7) {
         score += 40;
         artistValidated = true;
-      }
-      else if (artistOverlap >= 0.3) {
-        score += 20;
+      } else if (artistOverlap >= validationThreshold) {
+        // High-trust channels get a slightly better score for moderate matches
+        score += isHighTrustChannel ? 30 : 20;
         artistValidated = true;
+      } else {
+        score += 5; // Different artist — small consolation only
       }
-      else score += 5; // Different artist — small consolation
-    } else {
-      score += 10; // No artist to validate against
+
+      // Channel authority bonus: Topic/VEVO channels that also validate artist
+      if (artistValidated) {
+        if (channelContext.channelType === 'TOPIC_AUTO') score += 15;
+        else if (channelContext.channelType === 'VEVO') score += 10;
+      }
     }
+    // No queryArtist → title-only search. No bonus. Artist cannot be validated.
 
     // Bonus for synced lyrics availability
     if (track.syncedLyrics) score += 10;
@@ -68,8 +83,10 @@ const LyricsService = {
   /**
    * Fetch from LRCLIB. Evaluates top-3 candidates and returns best scorer.
    * Returns null if nothing found or all candidates are hard-rejected.
+   * channelContext is forwarded to _scoreResult for trust-level adjustments.
    */
-  _executeSearch: async function (title, artist) {
+  _executeSearch: async function (title, artist, channelContext) {
+    channelContext = channelContext || {};
     const url = new URL('https://lrclib.net/api/search');
     url.searchParams.append('track_name', title);
     if (artist) url.searchParams.append('artist_name', artist);
@@ -94,7 +111,7 @@ const LyricsService = {
     let bestScore = 0;
     let bestArtistValidated = false;
     for (const track of candidates) {
-      const { score, artistValidated } = this._scoreResult(track, title, artist);
+      const { score, artistValidated } = this._scoreResult(track, title, artist, channelContext);
       if (score > bestScore) {
         bestScore = score;
         bestTrack = track;
@@ -110,7 +127,9 @@ const LyricsService = {
       syncedLyrics: bestTrack.syncedLyrics,
       plainLyrics: bestTrack.plainLyrics,
       confidence: bestScore,
-      isVerified: bestScore >= 60 && bestArtistValidated,
+      // Verification requires BOTH sufficient score AND confirmed artist identity.
+      // Threshold raised to 70 (was 60) to prevent weak title-only matches from verifying.
+      isVerified: bestScore >= 70 && bestArtistValidated,
       artistValidated: bestArtistValidated
     };
   },
@@ -120,7 +139,8 @@ const LyricsService = {
    * Cascades through 4 attempts. Tracks the best result across all attempts.
    * Returns the highest-confidence result found (even if not verified).
    */
-  searchLyrics: async function (title, artist) {
+  searchLyrics: async function (title, artist, channelContext) {
+    channelContext = channelContext || {};
     try {
       let bestResult = null;
 
@@ -132,17 +152,18 @@ const LyricsService = {
         }
       };
 
-      // Attempt 1: Full Title + Artist
+      // Attempt 1: Full Title + Artist (with channel context for trust-level scoring)
       if (artist) {
-        YTLyricsLogger.log(`[LRCLIB] Attempt 1: "${title}" by "${artist}"`);
-        const r1 = await this._executeSearch(title, artist);
+        YTLyricsLogger.log(`[LRCLIB] Attempt 1: "${title}" by "${artist}" [channel: ${channelContext.channelType || 'UNKNOWN'}]`);
+        const r1 = await this._executeSearch(title, artist, channelContext);
         const shortCircuit = evaluate(r1);
         if (shortCircuit) return shortCircuit;
       }
 
       // Attempt 2: Full Title only (broaden search, drop artist)
+      // NOTE: channelContext still passed so Topic/VEVO can still boost if title matches
       YTLyricsLogger.log(`[LRCLIB] Attempt 2: "${title}" (No Artist)`);
-      const r2 = await this._executeSearch(title, null);
+      const r2 = await this._executeSearch(title, null, channelContext);
       const sc2 = evaluate(r2);
       if (sc2) return sc2;
 
@@ -151,7 +172,7 @@ const LyricsService = {
         const splitTitle = title.split('|')[0].trim();
         if (splitTitle && splitTitle !== title) {
           YTLyricsLogger.log(`[LRCLIB] Attempt 3: "${splitTitle}" (Split Pipe)`);
-          const r3 = await this._executeSearch(splitTitle, null);
+          const r3 = await this._executeSearch(splitTitle, null, channelContext);
           const sc3 = evaluate(r3);
           if (sc3) return sc3;
         }
@@ -162,7 +183,7 @@ const LyricsService = {
         const splitTitle = title.split('(')[0].trim();
         if (splitTitle && splitTitle !== title) {
           YTLyricsLogger.log(`[LRCLIB] Attempt 4: "${splitTitle}" (Split Parenthesis)`);
-          const r4 = await this._executeSearch(splitTitle, null);
+          const r4 = await this._executeSearch(splitTitle, null, channelContext);
           const sc4 = evaluate(r4);
           if (sc4) return sc4;
         }

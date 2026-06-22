@@ -49,7 +49,14 @@ const ListeningTracker = {
       normalizedTitle: videoInfo.title,
       normalizedArtist: videoInfo.channel || 'Unknown',
       date: localDateStr,
-      url: window.location.href
+      url: window.location.href,
+      // ── Phase 6: Enriched Metadata Fields ────────────────────────────
+      channelType: videoInfo.channelType || 'UNKNOWN',
+      artistValidated: false,
+      isCover: videoInfo.isCover || false,
+      isLive: videoInfo.isLive || false,
+      isRemix: videoInfo.isRemix || false,
+      featuredArtists: videoInfo.featuredArtists || []
     };
 
     // If video is already playing when we init, start the wall clock now
@@ -174,6 +181,10 @@ const ListeningTracker = {
       }
       this.currentSession.metadataSource = 'LRCLIB_VERIFIED';
       this.currentSession.metadataConfidence = metadata.confidence || 100;
+      // Store artist validation flag from the LRCLIB scoring result
+      if (metadata.artistValidated !== undefined) {
+        this.currentSession.artistValidated = metadata.artistValidated;
+      }
       YTLyricsLogger.log('[MUSIC-ANALYTICS] Session metadata verified from LRCLIB:', this.currentSession.title, '-', this.currentSession.artist, `(confidence: ${this.currentSession.metadataConfidence})`);
       this.saveSession();
     }

@@ -40,6 +40,9 @@ const AnalyticsEngine = {
       });
     }
 
+    // Count verified sessions for AI cache key accuracy
+    const verifiedSessions = history.filter(s => s.metadataSource === 'LRCLIB_VERIFIED').length;
+
     if (history.length === 0) return null;
     const baseStats = this._calculateStats(history);
 
@@ -50,7 +53,7 @@ const AnalyticsEngine = {
     const sortedArtists = Object.entries(baseStats.artists).sort((a, b) => b[1].plays - a[1].plays);
     const sortedSongs = Object.entries(baseStats.songs).sort((a, b) => b[1].plays - a[1].plays);
 
-    const topArtists = sortedArtists.slice(0, 5).map(a => ({ name: a[0], plays: a[1].plays, time: a[1].time }));
+    const topArtists = sortedArtists.slice(0, 5).map(a => ({ name: a[1].displayName || a[0], plays: a[1].plays, time: a[1].time }));
     const topSongs = sortedSongs.slice(0, 5).map(s => ({ title: s[1].title, artist: s[1].artist, plays: s[1].plays, time: s[1].time }));
 
     const mostReplayedArtist = topArtists.length > 0 ? topArtists[0] : null;
@@ -97,7 +100,10 @@ const AnalyticsEngine = {
       // Date Context
       selectedStartDate: startDateStr,
       selectedEndDate: endDateStr,
-      totalDaysAnalyzed
+      totalDaysAnalyzed,
+
+      // Data Quality Context (used in AI cache key)
+      verifiedSessions
     };
   },
 
@@ -202,7 +208,9 @@ const AnalyticsEngine = {
       const dateKey = session.date || `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
       const artist = (session.artist || 'Unknown').trim();
-      const normArtist = artist.toLowerCase().replace(/\s+/g, ' ');
+      // Bug A Fix: Normalize artist key to prevent case/whitespace fragmentation.
+      // 'Arijit Singh' and 'arijit singh' must map to the same entry.
+      const normArtistKey = artist.toLowerCase().replace(/\s+/g, ' ');
       const canonicalId = this._generateCanonicalIdentity(session.title, session.artist);
 
       // ── Replay Analytics ──────────────────────────────────────
@@ -224,9 +232,9 @@ const AnalyticsEngine = {
         if (startedAt >= startOfMonth) stats.newSongsThisMonth++;
       }
 
-      if (normArtist && normArtist !== 'unknown') {
-        if (!firstSeenArtist.has(normArtist)) {
-          firstSeenArtist.set(normArtist, startedAt);
+      if (normArtistKey && normArtistKey !== 'unknown') {
+        if (!firstSeenArtist.has(normArtistKey)) {
+          firstSeenArtist.set(normArtistKey, startedAt);
           if (startedAt >= startOfToday) stats.newArtistsToday++;
           if (startedAt >= startOfWeek) stats.newArtistsThisWeek++;
           if (startedAt >= startOfMonth) stats.newArtistsThisMonth++;
@@ -273,11 +281,13 @@ const AnalyticsEngine = {
       if (!stats.daily[dateKey]) stats.daily[dateKey] = { time: 0, songs: new Set(), artists: new Set() };
       stats.daily[dateKey].time += dur;
       stats.daily[dateKey].songs.add(canonicalId);
-      if (artist !== 'Unknown') stats.daily[dateKey].artists.add(artist);
+      // Use normalized key for daily artist uniqueness (consistent with discovery tracking)
+      if (normArtistKey !== 'unknown') stats.daily[dateKey].artists.add(normArtistKey);
 
-      if (!stats.artists[artist]) stats.artists[artist] = { time: 0, plays: 0 };
-      stats.artists[artist].time += dur;
-      stats.artists[artist].plays++;
+      // Bug A Fix: Use normalized key as map entry, store display name separately
+      if (!stats.artists[normArtistKey]) stats.artists[normArtistKey] = { time: 0, plays: 0, displayName: artist };
+      stats.artists[normArtistKey].time += dur;
+      stats.artists[normArtistKey].plays++;
 
       if (!stats.songs[canonicalId]) {
         stats.songs[canonicalId] = {
@@ -327,10 +337,11 @@ const AnalyticsEngine = {
 
     // Top artist/song
     let maxArtistTime = 0;
-    for (const [name, data] of Object.entries(stats.artists)) {
+    for (const [key, data] of Object.entries(stats.artists)) {
       if (data.time > maxArtistTime) {
         maxArtistTime = data.time;
-        stats.topArtist = name;
+        // Use displayName if available (normalized keys may be lowercase)
+        stats.topArtist = data.displayName || key;
       }
     }
     let maxSongTime = 0;

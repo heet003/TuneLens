@@ -66,11 +66,23 @@
     // Step 3: Extract clean query params using Metadata Intelligence Layer
     let queryTitle = videoInfo.title || '';
     let queryArtist = videoInfo.channel || '';
+    let channelContext = {}; // { channelType, channelConfidence } for LRCLIB scoring
+    let metaHints = {};     // { isLive, isCover, isRemix, featuredArtists } for session schema
 
     if (window.YTLyricsMetadataInt) {
       const candidates = window.YTLyricsMetadataInt.extractCandidates(queryTitle, queryArtist);
       queryTitle = candidates.candidateTitle;
       queryArtist = candidates.candidateArtist;
+      channelContext = {
+        channelType      : candidates.channelType,
+        channelConfidence: candidates.channelConfidence
+      };
+      metaHints = {
+        isLive         : candidates.isLive,
+        isCover        : candidates.isCover,
+        isRemix        : candidates.isRemix,
+        featuredArtists: candidates.featuredArtists || []
+      };
     } else {
       queryTitle = YTLyricsDetector.cleanTitle(queryTitle);
     }
@@ -85,21 +97,27 @@
     YTLyricsOverlay.updateDebugInfo({
       'Status': 'Fetching lyrics...',
       'Query Title': queryTitle,
-      'Query Artist': queryArtist
+      'Query Artist': queryArtist,
+      'Channel Type': channelContext.channelType || 'UNKNOWN'
     });
 
-    // Step 5: Initialize listening tracker
+    // Step 5: Initialize listening tracker with full metadata context
     if (window.YTLyricsTracker) {
       YTLyricsTracker.init({
-        videoId: videoInfo.videoId,
-        title: queryTitle || videoInfo.title,
-        channel: queryArtist || videoInfo.channel
+        videoId        : videoInfo.videoId,
+        title          : queryTitle || videoInfo.title,
+        channel        : queryArtist || videoInfo.channel,
+        channelType    : channelContext.channelType,
+        isLive         : metaHints.isLive,
+        isCover        : metaHints.isCover,
+        isRemix        : metaHints.isRemix,
+        featuredArtists: metaHints.featuredArtists
       });
     }
 
-    // Step 6: Fetch lyrics
+    // Step 6: Fetch lyrics — pass channelContext so LRCLIB scoring can apply trust levels
     const fetchStart = performance.now();
-    YTLyricsService.searchLyrics(queryTitle, queryArtist)
+    YTLyricsService.searchLyrics(queryTitle, queryArtist, channelContext)
       .then(lyricsData => {
         // Race condition guard: if the user navigated away, discard this stale response
         if (activeVideoId !== myVideoId) {
@@ -109,7 +127,12 @@
 
         const fetchMs = (performance.now() - fetchStart).toFixed(0);
         YTLyricsLogger.success('Lyrics found!', lyricsData.title, 'by', lyricsData.artist,
-          `| confidence: ${lyricsData.confidence} | verified: ${lyricsData.isVerified}`);
+          `| confidence: ${lyricsData.confidence} | verified: ${lyricsData.isVerified} | artistValidated: ${lyricsData.artistValidated}`);
+
+        // Bug C Fix: Only show the LRCLIB artist in the overlay header when the result is
+        // VERIFIED (artist identity confirmed). For AMBIGUOUS results, preserve the YouTube
+        // channel/artist that was already set in the header — keeping UI consistent with storage.
+        lyricsData.displayArtist = lyricsData.isVerified ? lyricsData.artist : queryArtist;
 
         // Always display lyrics in the overlay regardless of confidence
         YTLyricsOverlay.displayLyrics(lyricsData);
@@ -120,13 +143,15 @@
           'Lines': YTLyricsOverlay.parsedLyrics.length
         });
 
-        // Only update persistent session metadata when confidence is sufficient
+        // Phase 5 — Metadata Protection:
+        // Only update persistent session metadata when artist identity is confirmed.
         if (window.YTLyricsTracker) {
           if (lyricsData.isVerified) {
             YTLyricsTracker.updateSessionMetadata({
-              title: lyricsData.title,
-              artist: lyricsData.artist,
-              confidence: lyricsData.confidence
+              title          : lyricsData.title,
+              artist         : lyricsData.artist,
+              confidence     : lyricsData.confidence,
+              artistValidated: lyricsData.artistValidated
             });
           } else {
             // Mark session as LRCLIB_AMBIGUOUS without overwriting title/artist

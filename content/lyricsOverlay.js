@@ -257,8 +257,13 @@ const LyricsOverlay = {
   },
 
   displayLyrics: function (lyricsData) {
-    // Update header with confirmed API data
-    this.setSongMeta(lyricsData.title, lyricsData.artist);
+    // Bug C Fix: Use displayArtist (set by content.js) so the header shows the YouTube artist
+    // for AMBIGUOUS results, instead of always showing the LRCLIB artist.
+    // For VERIFIED results, displayArtist === lyricsData.artist (LRCLIB confirmed artist).
+    this.setSongMeta(
+      lyricsData.title,
+      lyricsData.displayArtist !== undefined ? lyricsData.displayArtist : lyricsData.artist
+    );
 
     if (lyricsData.syncedLyrics) {
       this.parsedLyrics = YTLyricsParser.parse(lyricsData.syncedLyrics);

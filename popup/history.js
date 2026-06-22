@@ -2,6 +2,7 @@ let allHistory = [];
 let filteredHistory = [];
 let currentPage = 1;
 const ITEMS_PER_PAGE = 50;
+let _cachedStats = null; // Bug B Fix: compute once at load, not on every keystroke
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -9,6 +10,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (e) {
     console.error('[YT-LYRICS] Failed to load history:', e);
     return;
+  }
+
+  // Bug B Fix: Compute stats once at load instead of on every search keystroke
+  if (allHistory.length > 0 && window.YTLyricsAnalytics) {
+    _cachedStats = window.YTLyricsAnalytics._calculateStats(allHistory);
   }
 
   // Sort newest first
@@ -122,14 +128,11 @@ function updateRecordCount() {
   if (countEl) {
     let summaryText = `${allHistory.length} sessions recorded`;
 
-    // Append Top Mood
-    if (allHistory.length > 0 && window.YTLyricsAnalytics) {
-      const stats = window.YTLyricsAnalytics._calculateStats(allHistory);
-      if (stats.primaryMood) {
-        const percent = stats.moodDistribution[stats.primaryMood] || 0;
-        const moodLabel = MOOD_MAPPING[stats.primaryMood] || stats.primaryMood;
-        summaryText += ` • Top Mood: ${moodLabel} (${percent}%)`;
-      }
+    // Bug B Fix: Use pre-computed cached stats instead of recalculating on every call
+    if (_cachedStats && _cachedStats.primaryMood) {
+      const percent = _cachedStats.moodDistribution[_cachedStats.primaryMood] || 0;
+      const moodLabel = MOOD_MAPPING[_cachedStats.primaryMood] || _cachedStats.primaryMood;
+      summaryText += ` • Top Mood: ${moodLabel} (${percent}%)`;
     }
 
     countEl.innerText = summaryText;

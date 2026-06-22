@@ -56,8 +56,8 @@ const YouTubeDetector = {
       .replace(/\[audio.*?\]/i, '')
       .replace(/\(visualizer.*?\)/i, '')
       .replace(/\[visualizer.*?\]/i, '')
-      .replace(/ft\..*/i, '')
-      .replace(/feat\..*/i, '');
+      .replace(/\s*[\(\[]\s*(?:feat(?:uring)?|ft)\.?\s+[^\)\]]+[\)\]]/gi, '')
+      .replace(/\s+(?:feat(?:uring)?|ft)\.?\s+[^|\-(\[]+$/gi, ''); // trailing non-parenthesized
     return cleaned.trim();
   }
 };

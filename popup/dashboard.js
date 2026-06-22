@@ -340,7 +340,9 @@ function renderHourlyChart(hourlyArray) {
 
 function renderTopList(elementId, dataObj, sortValGetter) {
   const arr = Object.entries(dataObj)
-    .map(([name, data]) => ({ name: data.title || name, time: data.time }))
+    // Bug A companion fix: use displayName for artists (normalized keys may be lowercase),
+    // or title for songs. Falls back to the raw key if neither is present.
+    .map(([name, data]) => ({ name: data.displayName || data.title || name, time: data.time }))
     .sort((a, b) => b.time - a.time)
     .slice(0, 8);
 

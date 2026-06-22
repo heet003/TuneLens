@@ -9,6 +9,7 @@ const VideoObserver = {
   previousTitle: null,
   onVideoChangeCallback: null,
   _videoEndedListener: null,
+  _videoEndedVideoEl: null,
   _pollingTimeout: null,
 
   init: function (callback) {
@@ -90,10 +91,9 @@ const VideoObserver = {
   },
 
   _attachVideoEndedListener: function (videoId) {
-    // Remove any previous ended listener to prevent duplicates
-    if (this._videoEndedListener) {
-      const oldVideo = document.querySelector('video.html5-main-video');
-      if (oldVideo) oldVideo.removeEventListener('ended', this._videoEndedListener);
+    if (this._videoEndedListener && this._videoEndedVideoEl) {
+      this._videoEndedVideoEl.removeEventListener('ended', this._videoEndedListener);
+      this._videoEndedVideoEl = null;
     }
 
     // Wait for the video element to be available
@@ -105,6 +105,7 @@ const VideoObserver = {
           // Reset current video id so next checkVideoState triggers a full metadata fetch
           this.currentVideoId = null;
         };
+        this._videoEndedVideoEl = videoEl;
         videoEl.addEventListener('ended', this._videoEndedListener);
       } else if (attempts < 5) {
         setTimeout(() => attachWhenReady(attempts + 1), 500);

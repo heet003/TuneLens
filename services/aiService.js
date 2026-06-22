@@ -52,7 +52,9 @@ const AIService = {
    * @param {String} endDate YYYY-MM-DD
    */
   generateMusicAnalysis: async function (payload, startDate, endDate) {
-    const cacheKey = this._generateCacheKey(startDate, endDate, payload.totalTime, payload.totalSessions);
+    // Bug D Fix: pass verifiedSessions so the cache key reflects data quality changes.
+    // Previously this was always _v0 because the 5th argument was never passed.
+    const cacheKey = this._generateCacheKey(startDate, endDate, payload.totalTime, payload.totalSessions, payload.verifiedSessions);
 
     // 1. Check Cache
     const cached = await this._getFromCache(cacheKey);
