@@ -6,7 +6,7 @@ const Logger = {
   debugMode: true,
   prefix: '[YT-LYRICS]',
 
-  init: function() {
+  init: function () {
     if (typeof chrome !== 'undefined' && chrome.storage) {
       chrome.storage.local.get(['debugMode'], (result) => {
         if (result.debugMode !== undefined) {
@@ -16,19 +16,19 @@ const Logger = {
     }
   },
 
-  log: function(...args) {
+  log: function (...args) {
     if (this.debugMode) console.log(this.prefix, ...args);
   },
-  
-  warn: function(...args) {
+
+  warn: function (...args) {
     if (this.debugMode) console.warn(this.prefix, ...args);
   },
-  
-  error: function(...args) {
+
+  error: function (...args) {
     if (this.debugMode) console.error(this.prefix, ...args);
   },
-  
-  success: function(...args) {
+
+  success: function (...args) {
     if (this.debugMode) console.log(`%c${this.prefix}`, 'color: #00ff00; font-weight: bold;', ...args);
   }
 };

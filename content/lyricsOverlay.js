@@ -20,6 +20,17 @@ const LyricsOverlay = {
   offsetDisplay: null,
   currentVideoId: null,
 
+  // Search Mode State
+  isSearchMode: false,
+  searchContainer: null,
+  searchInputTitle: null,
+  searchInputArtist: null,
+  searchSubmitBtn: null,
+  searchSpinner: null,
+  searchError: null,
+  searchBtn: null,
+  onManualSearch: null, // Callback for content.js
+
   init: function () {
     // Only build the DOM once — subsequent calls just show the panel
     if (document.getElementById('yt-lyrics-overlay')) {
@@ -72,6 +83,12 @@ const LyricsOverlay = {
     offsetIncBtn.title = 'Advance lyrics (+0.5s)';
     offsetIncBtn.onclick = () => this.adjustOffset(0.5);
 
+    this.searchBtn = document.createElement('button');
+    this.searchBtn.className = 'yt-lyrics-search-btn';
+    this.searchBtn.innerHTML = '&#x1F50D;'; // Magnifying glass
+    this.searchBtn.title = 'Manual Search';
+    this.searchBtn.onclick = () => this.toggleSearchMode();
+
     this.minBtn = document.createElement('button');
     this.minBtn.className = 'yt-lyrics-min-btn';
     this.minBtn.innerHTML = '&#x2012;';
@@ -87,6 +104,7 @@ const LyricsOverlay = {
     controls.appendChild(offsetDecBtn);
     controls.appendChild(this.offsetDisplay);
     controls.appendChild(offsetIncBtn);
+    controls.appendChild(this.searchBtn);
     controls.appendChild(this.minBtn);
     controls.appendChild(closeBtn);
 
@@ -103,12 +121,63 @@ const LyricsOverlay = {
     this.lyricsContainer = document.createElement('div');
     this.lyricsContainer.id = 'yt-lyrics-content';
 
+    // ── Search Container ───────────────────────────────────────────
+    this.searchContainer = document.createElement('div');
+    this.searchContainer.id = 'yt-search-container';
+
+    this.searchContainer.innerHTML = `
+      <div class="yt-search-title">Find Lyrics</div>
+      <div class="yt-search-group">
+        <label class="yt-search-label">Song Name</label>
+        <input type="text" class="yt-search-input" id="yt-search-input-title" placeholder="e.g. Shape of You" autocomplete="off" />
+      </div>
+      <div class="yt-search-group">
+        <label class="yt-search-label">Artist Name</label>
+        <input type="text" class="yt-search-input" id="yt-search-input-artist" placeholder="e.g. Ed Sheeran" autocomplete="off" />
+      </div>
+      <button class="yt-search-submit" id="yt-search-submit-btn">
+        <div class="yt-spinner" id="yt-search-spinner"></div>
+        <span id="yt-search-submit-text">Search</span>
+      </button>
+      <div class="yt-search-error" id="yt-search-error-msg"></div>
+    `;
+
     this.container.appendChild(header);
     this.container.appendChild(this.debugContainer);
     this.container.appendChild(this.lyricsContainer);
+    this.container.appendChild(this.searchContainer);
 
     document.body.appendChild(this.container);
     this.makeDraggable(this.container, header);
+
+    // Bind Search Elements
+    this.searchInputTitle = document.getElementById('yt-search-input-title');
+    this.searchInputArtist = document.getElementById('yt-search-input-artist');
+    this.searchSubmitBtn = document.getElementById('yt-search-submit-btn');
+    this.searchSpinner = document.getElementById('yt-search-spinner');
+    this.searchError = document.getElementById('yt-search-error-msg');
+
+    const submitSearchText = document.getElementById('yt-search-submit-text');
+
+    this.searchSubmitBtn.onclick = () => {
+      const title = this.searchInputTitle.value.trim();
+      const artist = this.searchInputArtist.value.trim();
+      if (!title) {
+        this.setSearchState('error', 'Song Name is required.');
+        return;
+      }
+      if (this.onManualSearch) {
+        this.onManualSearch(title, artist);
+      }
+    };
+
+    // BUG-08: Clear error message as soon as user starts editing the inputs
+    this.searchInputTitle.addEventListener('input', () => {
+      if (this.searchError) this.searchError.style.display = 'none';
+    });
+    this.searchInputArtist.addEventListener('input', () => {
+      if (this.searchError) this.searchError.style.display = 'none';
+    });
 
     // Load debug panel visibility from storage
     this._applyDebugVisibility();
@@ -120,6 +189,18 @@ const LyricsOverlay = {
     this.parsedLyrics = [];
     this.activeLyricIndex = -1;
     this.offset = 0;
+
+    // Close search mode if open
+    if (this.isSearchMode) {
+      this.isSearchMode = false;
+      if (this.searchContainer) this.searchContainer.style.display = 'none';
+      if (this.lyricsContainer) this.lyricsContainer.style.display = 'block';
+      if (this.searchBtn) this.searchBtn.style.background = '';
+    }
+    this.setSearchState('idle');
+    if (this.searchInputTitle) this.searchInputTitle.value = '';
+    if (this.searchInputArtist) this.searchInputArtist.value = '';
+
     if (this.offsetDisplay) this.offsetDisplay.innerText = '0.0s';
     if (this.lyricsContainer) this.lyricsContainer.innerHTML = '';
     // Reset now-playing badge to paused state
@@ -253,6 +334,60 @@ const LyricsOverlay = {
   displayMessage: function (message) {
     if (this.lyricsContainer) {
       this.lyricsContainer.innerHTML = `<div class="yt-lyrics-message">${message}</div>`;
+    }
+  },
+
+  // ── Manual Search Mode Controls ──────────────────────────────────
+  toggleSearchMode: function () {
+    if (!this.container) return;
+    this.isSearchMode = !this.isSearchMode;
+
+    if (this.isSearchMode) {
+      this.lyricsContainer.style.display = 'none';
+      this.searchContainer.style.display = 'flex';
+      this.searchBtn.style.background = 'rgba(123, 97, 255, 0.5)';
+      this.searchInputTitle.focus();
+    } else {
+      this.searchContainer.style.display = 'none';
+      this.lyricsContainer.style.display = 'block';
+      this.searchBtn.style.background = '';
+    }
+  },
+
+  setSearchInitialValues: function (title, artist) {
+    // BUG-07: Removed !value guard. reset() always clears fields before this is called,
+    // so the guard was redundant and added hidden fragility.
+    if (this.searchInputTitle) this.searchInputTitle.value = title || '';
+    if (this.searchInputArtist) this.searchInputArtist.value = artist || '';
+  },
+
+  setSearchState: function (state, message = '') {
+    // BUG-05: Broadened null guard to cover all element references, not just the container.
+    if (!this.searchContainer || !this.searchInputTitle) return;
+    const submitText = document.getElementById('yt-search-submit-text');
+
+    if (state === 'loading') {
+      this.searchInputTitle.disabled = true;
+      this.searchInputArtist.disabled = true;
+      this.searchSubmitBtn.disabled = true;
+      this.searchSpinner.style.display = 'block';
+      submitText.innerText = 'Searching...';
+      this.searchError.style.display = 'none';
+    } else if (state === 'error') {
+      this.searchInputTitle.disabled = false;
+      this.searchInputArtist.disabled = false;
+      this.searchSubmitBtn.disabled = false;
+      this.searchSpinner.style.display = 'none';
+      submitText.innerText = 'Search';
+      this.searchError.innerText = message || 'No lyrics found. Try another song or artist name.';
+      this.searchError.style.display = 'block';
+    } else if (state === 'idle') {
+      this.searchInputTitle.disabled = false;
+      this.searchInputArtist.disabled = false;
+      this.searchSubmitBtn.disabled = false;
+      this.searchSpinner.style.display = 'none';
+      submitText.innerText = 'Search';
+      this.searchError.style.display = 'none';
     }
   },
 

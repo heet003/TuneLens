@@ -52,7 +52,7 @@ const LyricsService = {
       const artistOverlap = this._wordOverlap(track.artistName, queryArtist);
       // Topic/VEVO channels have pre-validated artist — lower validation threshold
       const isHighTrustChannel = channelContext.channelType === 'TOPIC_AUTO' ||
-                                  channelContext.channelType === 'VEVO';
+        channelContext.channelType === 'VEVO';
       const validationThreshold = isHighTrustChannel ? 0.2 : 0.3;
 
       if (artistOverlap >= 0.7) {
@@ -136,66 +136,22 @@ const LyricsService = {
 
   /**
    * Main search entry point.
-   * Cascades through 4 attempts. Tracks the best result across all attempts.
-   * Returns the highest-confidence result found (even if not verified).
+   * Performs a single search and returns the best result.
    */
   searchLyrics: async function (title, artist, channelContext) {
     channelContext = channelContext || {};
     try {
-      let bestResult = null;
+      YTLyricsLogger.log(`[LRCLIB] Searching: "${title}" ${artist ? `by "${artist}"` : '(No Artist)'}`);
+      const result = await this._executeSearch(title, artist, channelContext);
 
-      const evaluate = (result) => {
-        if (!result) return;
-        if (result.isVerified) return result; // short-circuit signal
-        if (!bestResult || result.confidence > bestResult.confidence) {
-          bestResult = result;
+      if (result) {
+        if (!result.isVerified) {
+          YTLyricsLogger.log(`[LRCLIB] Result is AMBIGUOUS (confidence: ${result.confidence}). Lyrics shown but metadata NOT updated.`);
         }
-      };
-
-      // Attempt 1: Full Title + Artist (with channel context for trust-level scoring)
-      if (artist) {
-        YTLyricsLogger.log(`[LRCLIB] Attempt 1: "${title}" by "${artist}" [channel: ${channelContext.channelType || 'UNKNOWN'}]`);
-        const r1 = await this._executeSearch(title, artist, channelContext);
-        const shortCircuit = evaluate(r1);
-        if (shortCircuit) return shortCircuit;
+        return result;
       }
 
-      // Attempt 2: Full Title only (broaden search, drop artist)
-      // NOTE: channelContext still passed so Topic/VEVO can still boost if title matches
-      YTLyricsLogger.log(`[LRCLIB] Attempt 2: "${title}" (No Artist)`);
-      const r2 = await this._executeSearch(title, null, channelContext);
-      const sc2 = evaluate(r2);
-      if (sc2) return sc2;
-
-      // Attempt 3: Split by '|' (safeguard for any missed pipe pollution)
-      if (title.includes('|')) {
-        const splitTitle = title.split('|')[0].trim();
-        if (splitTitle && splitTitle !== title) {
-          YTLyricsLogger.log(`[LRCLIB] Attempt 3: "${splitTitle}" (Split Pipe)`);
-          const r3 = await this._executeSearch(splitTitle, null, channelContext);
-          const sc3 = evaluate(r3);
-          if (sc3) return sc3;
-        }
-      }
-
-      // Attempt 4: Split by '(' (strip trailing parentheticals)
-      if (title.includes('(')) {
-        const splitTitle = title.split('(')[0].trim();
-        if (splitTitle && splitTitle !== title) {
-          YTLyricsLogger.log(`[LRCLIB] Attempt 4: "${splitTitle}" (Split Parenthesis)`);
-          const r4 = await this._executeSearch(splitTitle, null, channelContext);
-          const sc4 = evaluate(r4);
-          if (sc4) return sc4;
-        }
-      }
-
-      // Return best unverified result if any attempt produced lyrics
-      if (bestResult) {
-        YTLyricsLogger.log(`[LRCLIB] Best result is AMBIGUOUS (confidence: ${bestResult.confidence}). Lyrics shown but metadata NOT updated.`);
-        return bestResult;
-      }
-
-      throw new Error('Lyrics not found after all attempts.');
+      throw new Error('Lyrics not found.');
 
     } catch (error) {
       if (error.name === 'AbortError') throw new Error('Network timeout while fetching lyrics.');

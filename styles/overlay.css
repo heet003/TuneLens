@@ -274,3 +274,119 @@
 #yt-lyrics-content::-webkit-scrollbar-thumb:hover {
   background: rgba(123, 97, 255, 0.6);
 }
+
+/* ── Search Mode Container ─────────────────────────────────────── */
+#yt-search-container {
+  flex: 1;
+  display: none; /* hidden by default */
+  flex-direction: column;
+  padding: 28px 20px;
+  overflow-y: auto;
+  align-items: center;
+}
+
+.yt-search-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #fff;
+  text-align: center;
+}
+
+.yt-search-group {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.yt-search-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 6px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.yt-search-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(123, 97, 255, 0.2);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.yt-search-input:focus {
+  outline: none;
+  border-color: rgba(123, 97, 255, 0.8);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.yt-search-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.yt-search-submit {
+  width: 100%;
+  background: #7B61FF;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.yt-search-submit:hover:not(:disabled) {
+  background: #8b74ff;
+  transform: translateY(-1px);
+}
+
+.yt-search-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.yt-search-submit:disabled {
+  background: rgba(123, 97, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.yt-search-error {
+  margin-top: 20px;
+  color: #ff6b6b;
+  font-size: 13px;
+  text-align: center;
+  padding: 12px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  display: none;
+}
+
+.yt-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: yt-spin 0.8s linear infinite;
+  display: none;
+}
+
+@keyframes yt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

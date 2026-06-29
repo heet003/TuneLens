@@ -179,7 +179,7 @@ const ListeningTracker = {
         this.currentSession.artist = metadata.artist;
         this.currentSession.normalizedArtist = metadata.artist;
       }
-      this.currentSession.metadataSource = 'LRCLIB_VERIFIED';
+      this.currentSession.metadataSource = metadata.source || 'LRCLIB_VERIFIED';
       this.currentSession.metadataConfidence = metadata.confidence || 100;
       // Store artist validation flag from the LRCLIB scoring result
       if (metadata.artistValidated !== undefined) {

@@ -15,12 +15,12 @@ const MetadataIntelligence = {
 
   // ── Channel Type Constants ────────────────────────────────────────────
   CHANNEL_TYPE: {
-    TOPIC_AUTO : 'TOPIC_AUTO',  // YouTube auto-generated, highest trust
-    VEVO       : 'VEVO',        // Label-verified official
-    OFFICIAL   : 'OFFICIAL',    // Artist official channel
-    LABEL      : 'LABEL',       // T-Series, Sony etc — no artist signal
-    LYRICS     : 'LYRICS',      // Lyrics aggregator — toxic
-    UNKNOWN    : 'UNKNOWN'      // Default
+    TOPIC_AUTO: 'TOPIC_AUTO',  // YouTube auto-generated, highest trust
+    VEVO: 'VEVO',        // Label-verified official
+    OFFICIAL: 'OFFICIAL',    // Artist official channel
+    LABEL: 'LABEL',       // T-Series, Sony etc — no artist signal
+    LYRICS: 'LYRICS',      // Lyrics aggregator — toxic
+    UNKNOWN: 'UNKNOWN'      // Default
   },
 
   // ── Known Toxic Entities ──────────────────────────────────────────────
@@ -57,7 +57,7 @@ const MetadataIntelligence = {
     const CT = this.CHANNEL_TYPE;
     if (!channelName) return { channelType: CT.UNKNOWN, extractedArtist: '', channelConfidence: 0 };
 
-    const raw   = channelName.trim();
+    const raw = channelName.trim();
     const lower = raw.toLowerCase();
 
     // ── Highest Trust: YouTube Topic channels (" - Topic" suffix) ─────
@@ -305,7 +305,7 @@ const MetadataIntelligence = {
 
       // Agreement bonus: if channel name also points to same artist, signal it
       if (channelResult.extractedArtist &&
-          this._wordSimilarity(channelResult.extractedArtist, titleResult.candidateArtist) >= 0.5) {
+        this._wordSimilarity(channelResult.extractedArtist, titleResult.candidateArtist) >= 0.5) {
         signals.push({ source: 'channelTitleAgreement', bonus: 10 });
       }
 
@@ -322,10 +322,10 @@ const MetadataIntelligence = {
     }
 
     return {
-      candidateTitle    : titleResult.candidateTitle.trim(),
-      candidateArtist   : candidateArtist.trim(),
-      channelType       : channelResult.channelType,
-      channelConfidence : channelResult.channelConfidence,
+      candidateTitle: titleResult.candidateTitle.trim(),
+      candidateArtist: candidateArtist.trim(),
+      channelType: channelResult.channelType,
+      channelConfidence: channelResult.channelConfidence,
       titleStructureScore: titleResult.titleStructureScore,
       isLive,
       isCover,
@@ -335,11 +335,12 @@ const MetadataIntelligence = {
     };
   },
 
+
   // ── Utility: Backward-compatible toxic channel check ─────────────────
   isToxicChannel: function (channelName) {
     const result = this.classifyChannel(channelName);
     return result.channelType === this.CHANNEL_TYPE.LYRICS ||
-           result.channelType === this.CHANNEL_TYPE.LABEL;
+      result.channelType === this.CHANNEL_TYPE.LABEL;
   },
 
   // ── Utility: Check if a string is a toxic/unusable artist name ───────
