@@ -4,6 +4,18 @@
 
   let syncInterval = null;
 
+  // ── TuneDeck: listen for toggle messages from the popup ────────────
+  // The popup sends TUNEDECK_TOGGLE when the user flips the switch,
+  // allowing enable/disable without a page refresh.
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message?.type !== 'TUNEDECK_TOGGLE' || !window.TuneDeckClient) return;
+    if (message.payload?.enabled) {
+      TuneDeckClient.enable();
+    } else {
+      TuneDeckClient.disable();
+    }
+  });
+
   function startSyncLoop() {
     if (syncInterval) clearInterval(syncInterval);
 
@@ -15,6 +27,12 @@
       const videoEl = document.querySelector('video.html5-main-video');
       if (videoEl) {
         YTLyricsOverlay.setPlayingState(!videoEl.paused);
+
+        // ── TuneDeck Hook 3: Forward play/pause state to server ──────
+        // TuneDeckClient debounces and deduplicates internally — safe to call every 500ms.
+        if (window.TuneDeckClient) {
+          TuneDeckClient.onPlayStateChange(!videoEl.paused, videoEl.currentTime, videoEl.duration);
+        }
       }
 
       // Update debug info (only rendered if debug mode is on)
@@ -115,6 +133,23 @@
 
     // Pass prefill values to the Manual Search form
     YTLyricsOverlay.setSearchInitialValues(queryTitle, queryArtist);
+
+    // ── TuneDeck Hook 2: Notify server of new song ─────────────────
+    // artwork is intentionally omitted — ArtworkResolver on the server
+    // probes YouTube's CDN and selects the highest quality available.
+    if (window.TuneDeckClient) {
+      TuneDeckClient.onVideoChange({
+        id: videoInfo.videoId,
+        title: queryTitle || videoInfo.title || '',
+        artist: queryArtist || videoInfo.channel || '',
+        channel: videoInfo.channel || '',
+        duration: 0, // Unknown until playback begins; server will receive via progress
+        channelType: channelContext.channelType,
+        isLive: metaHints.isLive,
+        isCover: metaHints.isCover,
+        isRemix: metaHints.isRemix
+      });
+    }
 
     // Step 5: Bind Manual Search Orchestrator for this video session
     YTLyricsOverlay.onManualSearch = (title, artist) => {
@@ -338,6 +373,17 @@
   function init() {
     YTLyricsLogger.log('Initializing TuneLens extension');
     YTLyricsVideoObserver.init(handleVideoChange);
+
+    // ── TuneDeck Hook 1: Initialize client based on saved preference ──
+    // Default is OFF — nothing happens unless the user enables TuneDeck.
+    if (window.TuneDeckClient) {
+      chrome.storage.local.get(['tunedeckEnabled'], (result) => {
+        if (result.tunedeckEnabled === true) {
+          TuneDeckClient.enable();
+        }
+      });
+    }
+
   }
 
   // Allow YouTube SPA to finish mounting before scanning

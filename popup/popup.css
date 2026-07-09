@@ -208,3 +208,37 @@ input:checked + .slider:before {
   min-height: 14px;
   font-weight: 500;
 }
+
+/* ── TuneDeck Toggle Row ─────────────────────────────────────── */
+.tunedeck-row {
+  margin-top: 2px;
+}
+
+.settings-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-sublabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #4A5568;
+  transition: color 0.3s ease;
+}
+
+.settings-sublabel.active {
+  color: #00D4AA;
+}
+
+/* TuneDeck slider uses teal accent to differentiate from debug purple */
+input:checked + .tunedeck-slider {
+  background: rgba(0, 212, 170, 0.25);
+}
+
+input:checked + .tunedeck-slider:before {
+  background: #00D4AA;
+  box-shadow: 0 0 8px rgba(0, 212, 170, 0.4);
+}

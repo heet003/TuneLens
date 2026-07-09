@@ -28,6 +28,7 @@
         "content/youtubeDetector.js",
         "content/videoObserver.js",
         "content/lyricsOverlay.js",
+        "services/tuneDeckClient.js",
         "content/content.js"
       ],
       "run_at": "document_end"
