@@ -188,9 +188,8 @@
 
           YTLyricsOverlay.displayLyrics(lyricsData);
           startSyncLoop(); // BUG-01: start sync loop for manually found lyrics
-          
           if (window.TuneDeckClient) {
-            TuneDeckClient.onMetadataUpdated(myVideoId, lyricsData.title, lyricsData.artist, lyricsData);
+            TuneDeckClient.onMetadataUpdated(myVideoId, lyricsData.title, lyricsData.displayArtist !== undefined ? lyricsData.displayArtist : lyricsData.artist, lyricsData);
           }
 
           YTLyricsOverlay.updateDebugInfo({
@@ -275,7 +274,7 @@
         startSyncLoop();
 
         if (window.TuneDeckClient) {
-          TuneDeckClient.onMetadataUpdated(myVideoId, cachedLyrics.title, cachedLyrics.artist, cachedLyrics);
+          TuneDeckClient.onMetadataUpdated(myVideoId, cachedLyrics.title, cachedLyrics.displayArtist !== undefined ? cachedLyrics.displayArtist : cachedLyrics.artist, cachedLyrics);
         }
 
         YTLyricsOverlay.updateDebugInfo({
@@ -329,11 +328,11 @@
           lyricsData.displayArtist = lyricsData.isVerified ? lyricsData.artist : queryArtist;
 
           YTLyricsOverlay.displayLyrics(lyricsData);
-          
+
           if (window.TuneDeckClient) {
-            TuneDeckClient.onMetadataUpdated(myVideoId, lyricsData.title, lyricsData.artist, lyricsData);
+            TuneDeckClient.onMetadataUpdated(myVideoId, lyricsData.title, lyricsData.displayArtist !== undefined ? lyricsData.displayArtist : lyricsData.artist, lyricsData);
           }
-          
+
           YTLyricsOverlay.updateDebugInfo({
             'Status': lyricsData.isVerified ? 'Syncing (Verified)' : 'Syncing (Ambiguous)',
             'API Time': fetchMs + 'ms',

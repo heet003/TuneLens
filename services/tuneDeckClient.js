@@ -62,7 +62,7 @@ const TuneDeckClient = {
     YTLyricsLogger.log('[TuneDeck] Disabled — closing connection and releasing lock.');
     this._clearReconnectTimer();
     this._stopProgress();
-    
+
     if (this._lockController) {
       this._lockController.abort();
       this._lockController = null;
@@ -127,13 +127,17 @@ const TuneDeckClient = {
     // Debounce to avoid flapping during ads/buffering
     if (this._playPauseDebounceTimer) clearTimeout(this._playPauseDebounceTimer);
     this._playPauseDebounceTimer = setTimeout(() => {
-      // Re-check after debounce (state may have flipped back)
-      if (isPlaying === this._lastIsPlaying) return;
+      // Re-evaluate real-time state rather than using the stale closure variable
+      const videoEl = document.querySelector('video.html5-main-video');
+      const currentIsPlaying = videoEl ? !videoEl.paused : isPlaying;
 
-      this._lastIsPlaying = isPlaying;
+      // Re-check after debounce (state may have flipped back)
+      if (currentIsPlaying === this._lastIsPlaying) return;
+
+      this._lastIsPlaying = currentIsPlaying;
       const safeDuration = isNaN(duration) ? 0 : duration;
 
-      if (isPlaying) {
+      if (currentIsPlaying) {
         this._send({ type: 'play', payload: { position: currentTime }, ts: Date.now() });
         this._startProgress(currentTime, safeDuration);
       } else {
@@ -187,7 +191,7 @@ const TuneDeckClient = {
     if (!this._enabled || !this._lastVideoId) return;
     if (this._isBuffering === isBuffering) return;
     this._isBuffering = isBuffering;
-    
+
     this._send({
       type: 'buffering',
       payload: { isBuffering, position: currentTime },
