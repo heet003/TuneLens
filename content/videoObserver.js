@@ -11,6 +11,7 @@ const VideoObserver = {
   _videoEndedListener: null,
   _videoEndedVideoEl: null,
   _pollingTimeout: null,
+  _fallbackIntervalId: null,
 
   init: function (callback) {
     this.onVideoChangeCallback = callback;
@@ -30,8 +31,20 @@ const VideoObserver = {
       this.checkVideoState();
     });
 
-    // Fallback polling every 2s for edge cases
-    setInterval(() => this.checkVideoState(), 2000);
+    // Fallback polling every 2s for edge cases (stored so it can be cleaned up)
+    this._fallbackIntervalId = setInterval(() => this.checkVideoState(), 2000);
+  },
+
+  // Stops all polling. Call when the extension is disabled.
+  cleanup: function () {
+    if (this._fallbackIntervalId) {
+      clearInterval(this._fallbackIntervalId);
+      this._fallbackIntervalId = null;
+    }
+    if (this._pollingTimeout) {
+      clearTimeout(this._pollingTimeout);
+      this._pollingTimeout = null;
+    }
   },
 
   checkVideoState: function () {

@@ -232,6 +232,15 @@ const TuneDeckClient = {
   _startProgress: function (initialPosition, initialDuration) {
     this._stopProgress();
 
+    // Send one immediate progress event so the mobile receives the real
+    // duration right away, before the first 5-second interval tick fires.
+    // Without this, the mobile shows '0:00' total for the first 5 seconds.
+    this._send({
+      type: 'progress',
+      payload: { position: initialPosition, duration: initialDuration },
+      ts: Date.now()
+    });
+
     this._progressTimer = setInterval(() => {
       if (!this._enabled) { this._stopProgress(); return; }
 
