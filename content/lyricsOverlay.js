@@ -237,6 +237,10 @@ const LyricsOverlay = {
           this.offsetDisplay.innerText = (this.offset > 0 ? '+' : '') + this.offset.toFixed(1) + 's';
         }
         YTLyricsLogger.log('Loaded cached offset for', videoId, ':', this.offset);
+
+        if (window.TuneDeckClient) {
+          TuneDeckClient.onOffsetUpdated(videoId, this.offset);
+        }
       }
     });
   },
@@ -320,6 +324,10 @@ const LyricsOverlay = {
       this.offsetDisplay.innerText = (this.offset > 0 ? '+' : '') + this.offset.toFixed(1) + 's';
     }
     this._saveOffset();
+
+    if (window.TuneDeckClient && window.YTLyricsDetector) {
+      TuneDeckClient.onOffsetUpdated(window.YTLyricsDetector.getVideoId(), this.offset);
+    }
   },
 
   updateDebugInfo: function (info) {

@@ -155,6 +155,11 @@ const TuneDeckClient = {
     // Discard if the video has already changed
     if (videoId !== this._lastVideoId) return;
 
+    // Ensure the current offset is bundled with the metadata payload
+    if (lyricsData && typeof window.YTLyricsOverlay !== 'undefined') {
+      lyricsData.offset = window.YTLyricsOverlay.offset || 0;
+    }
+
     this._send({
       type: 'metadata_updated',
       payload: {
@@ -162,6 +167,23 @@ const TuneDeckClient = {
         title: newTitle,
         artist: newArtist,
         lyrics: lyricsData
+      },
+      ts: Date.now()
+    });
+  },
+
+  /**
+   * Called by content.js when the user manually adjusts the lyrics offset.
+   */
+  onOffsetUpdated: function (videoId, offset) {
+    if (!this._enabled) return;
+    if (videoId !== this._lastVideoId) return;
+
+    this._send({
+      type: 'offset_updated',
+      payload: {
+        id: videoId,
+        offset: offset
       },
       ts: Date.now()
     });
