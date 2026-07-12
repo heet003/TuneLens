@@ -3,6 +3,7 @@
   YTLyricsLogger.success('Content script loaded');
 
   let syncInterval = null;
+  let lastPolledTime = -1;
 
   // ── TuneDeck: listen for toggle messages from the popup ────────────
   // The popup sends TUNEDECK_TOGGLE when the user flips the switch,
@@ -32,7 +33,20 @@
         // TuneDeckClient debounces and deduplicates internally — safe to call every 500ms.
         if (window.TuneDeckClient) {
           TuneDeckClient.onPlayStateChange(!videoEl.paused, videoEl.currentTime, videoEl.duration);
+
+          // Seek detection
+          if (lastPolledTime >= 0 && Math.abs(videoEl.currentTime - lastPolledTime) > 1.5) {
+            TuneDeckClient.onProgress(videoEl.currentTime, videoEl.duration);
+          }
+
+          // Buffering detection (readyState < 3 means waiting for data)
+          const isBuffering = videoEl.readyState < 3;
+          TuneDeckClient.onBufferingStateChange(isBuffering, videoEl.currentTime);
         }
+
+        lastPolledTime = videoEl.currentTime;
+      } else {
+        lastPolledTime = currentTime;
       }
 
       // Update debug info (only rendered if debug mode is on)
@@ -82,6 +96,7 @@
     // Update the cancellation token FIRST before any async work
     activeVideoId = videoInfo.videoId;
     const myVideoId = videoInfo.videoId;
+    lastPolledTime = -1; // Reset for new video
 
     // BUG-06: Invalidate in-flight manual searches from the previous video.
     manualSearchGeneration++;
@@ -173,6 +188,10 @@
 
           YTLyricsOverlay.displayLyrics(lyricsData);
           startSyncLoop(); // BUG-01: start sync loop for manually found lyrics
+          
+          if (window.TuneDeckClient) {
+            TuneDeckClient.onMetadataUpdated(myVideoId, lyricsData.title, lyricsData.artist, lyricsData);
+          }
 
           YTLyricsOverlay.updateDebugInfo({
             'Status': lyricsData.isVerified ? 'Syncing (Manual)' : 'Syncing (Manual Ambiguous)',
@@ -255,6 +274,10 @@
         YTLyricsOverlay.displayLyrics(cachedLyrics);
         startSyncLoop();
 
+        if (window.TuneDeckClient) {
+          TuneDeckClient.onMetadataUpdated(myVideoId, cachedLyrics.title, cachedLyrics.artist, cachedLyrics);
+        }
+
         YTLyricsOverlay.updateDebugInfo({
           'Status': 'Syncing (Manual Cache)',
           'Confidence': cachedLyrics.confidence,
@@ -306,6 +329,11 @@
           lyricsData.displayArtist = lyricsData.isVerified ? lyricsData.artist : queryArtist;
 
           YTLyricsOverlay.displayLyrics(lyricsData);
+          
+          if (window.TuneDeckClient) {
+            TuneDeckClient.onMetadataUpdated(myVideoId, lyricsData.title, lyricsData.artist, lyricsData);
+          }
+          
           YTLyricsOverlay.updateDebugInfo({
             'Status': lyricsData.isVerified ? 'Syncing (Verified)' : 'Syncing (Ambiguous)',
             'API Time': fetchMs + 'ms',

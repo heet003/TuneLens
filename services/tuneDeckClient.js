@@ -31,11 +31,13 @@ const TuneDeckClient = {
   _playPauseDebounceTimer: null,
   _reconnectDelay: 1000,
   _enabled: false,
+  _lockController: null,
 
   // Track last sent state for deduplication
   _lastVideoId: null,
   _lastIsPlaying: null,
   _lastPayload: null,
+  _isBuffering: false,
 
   // ── Public API ──────────────────────────────────────────────────────
 
@@ -46,8 +48,8 @@ const TuneDeckClient = {
   enable: function () {
     if (this._enabled) return;
     this._enabled = true;
-    YTLyricsLogger.log('[TuneDeck] Enabled — connecting to server...');
-    this._connect();
+    YTLyricsLogger.log('[TuneDeck] Enabled — acquiring tab lock...');
+    this._acquireLockAndConnect();
   },
 
   /**
@@ -57,9 +59,14 @@ const TuneDeckClient = {
   disable: function () {
     if (!this._enabled) return;
     this._enabled = false;
-    YTLyricsLogger.log('[TuneDeck] Disabled — closing connection.');
+    YTLyricsLogger.log('[TuneDeck] Disabled — closing connection and releasing lock.');
     this._clearReconnectTimer();
     this._stopProgress();
+    
+    if (this._lockController) {
+      this._lockController.abort();
+      this._lockController = null;
+    }
     if (this._ws) {
       this._ws.close();
       this._ws = null;
@@ -67,6 +74,7 @@ const TuneDeckClient = {
     this._lastVideoId = null;
     this._lastIsPlaying = null;
     this._lastPayload = null;
+    this._isBuffering = false;
   },
 
   /**
@@ -135,7 +143,90 @@ const TuneDeckClient = {
     }, this._PLAY_PAUSE_DEBOUNCE_MS);
   },
 
+  /**
+   * Called by content.js when LRCLIB metadata/lyrics are successfully resolved.
+   */
+  onMetadataUpdated: function (videoId, newTitle, newArtist, lyricsData) {
+    if (!this._enabled) return;
+    // Discard if the video has already changed
+    if (videoId !== this._lastVideoId) return;
+
+    this._send({
+      type: 'metadata_updated',
+      payload: {
+        id: videoId,
+        title: newTitle,
+        artist: newArtist,
+        lyrics: lyricsData
+      },
+      ts: Date.now()
+    });
+  },
+
+  /**
+   * Called by content.js when a large time jump (seek) is detected.
+   */
+  onProgress: function (currentTime, duration) {
+    if (!this._enabled || !this._lastVideoId) return;
+    const safeDuration = isNaN(duration) ? 0 : duration;
+    this._send({
+      type: 'progress',
+      payload: { position: currentTime, duration: safeDuration },
+      ts: Date.now()
+    });
+    // Restart progress timer so it aligns with the new position
+    if (this._lastIsPlaying) {
+      this._startProgress(currentTime, safeDuration);
+    }
+  },
+
+  /**
+   * Called by content.js when the video's buffering state changes.
+   */
+  onBufferingStateChange: function (isBuffering, currentTime) {
+    if (!this._enabled || !this._lastVideoId) return;
+    if (this._isBuffering === isBuffering) return;
+    this._isBuffering = isBuffering;
+    
+    this._send({
+      type: 'buffering',
+      payload: { isBuffering, position: currentTime },
+      ts: Date.now()
+    });
+  },
+
   // ── WebSocket Lifecycle ─────────────────────────────────────────────
+
+  _acquireLockAndConnect: function () {
+    if (this._lockController) return; // Already requested or holding
+
+    if (typeof navigator.locks === 'undefined') {
+      this._connect();
+      return;
+    }
+
+    const controller = new AbortController();
+    this._lockController = controller;
+
+    navigator.locks.request('tunedeck_ws_lock', { signal: controller.signal }, async (lock) => {
+      if (!lock || !this._enabled) return;
+
+      YTLyricsLogger.success('[TuneDeck] Acquired exclusive WebSocket lock for this tab.');
+      this._connect();
+
+      // Hold the lock indefinitely until this tab is disabled or closed
+      return new Promise((resolve) => {
+        controller.signal.addEventListener('abort', () => resolve());
+      });
+    }).catch(err => {
+      if (err.name === 'AbortError') {
+        YTLyricsLogger.log('[TuneDeck] WebSocket lock request aborted.');
+      } else {
+        YTLyricsLogger.error('[TuneDeck] WebSocket lock error:', err);
+        this._connect(); // Fallback on unexpected error
+      }
+    });
+  },
 
   _connect: function () {
     if (!this._enabled) return;
