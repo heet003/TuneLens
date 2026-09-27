@@ -159,7 +159,8 @@ const LyricsOverlay = {
 
     const submitSearchText = document.getElementById('yt-search-submit-text');
 
-    this.searchSubmitBtn.onclick = () => {
+    const handleSearchSubmit = () => {
+      if (this.searchSubmitBtn.disabled) return;
       const title = this.searchInputTitle.value.trim();
       const artist = this.searchInputArtist.value.trim();
       if (!title) {
@@ -170,6 +171,18 @@ const LyricsOverlay = {
         this.onManualSearch(title, artist);
       }
     };
+
+    this.searchSubmitBtn.onclick = handleSearchSubmit;
+
+    const handleEnterKey = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSearchSubmit();
+      }
+    };
+
+    this.searchInputTitle.addEventListener('keydown', handleEnterKey);
+    this.searchInputArtist.addEventListener('keydown', handleEnterKey);
 
     // BUG-08: Clear error message as soon as user starts editing the inputs
     this.searchInputTitle.addEventListener('input', () => {
