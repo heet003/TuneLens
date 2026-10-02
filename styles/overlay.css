@@ -278,7 +278,8 @@
 /* ── Search Mode Container ─────────────────────────────────────── */
 #yt-search-container {
   flex: 1;
-  display: none; /* hidden by default */
+  display: none;
+  /* hidden by default */
   flex-direction: column;
   padding: 28px 20px;
   overflow-y: auto;
@@ -389,4 +390,11 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Added to fix minimized overflow issue */
+#yt-lyrics-overlay.yt-lyrics-minimized #yt-lyrics-content,
+#yt-lyrics-overlay.yt-lyrics-minimized #yt-lyrics-debug,
+#yt-lyrics-overlay.yt-lyrics-minimized #yt-search-container {
+  display: none !important;
 }
