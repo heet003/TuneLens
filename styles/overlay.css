@@ -228,7 +228,12 @@
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
   transform-origin: center;
-  cursor: default;
+  cursor: pointer;
+}
+
+.yt-lyric-line:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .yt-lyric-active {

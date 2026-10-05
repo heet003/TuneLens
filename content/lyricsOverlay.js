@@ -121,6 +121,27 @@ const LyricsOverlay = {
     this.lyricsContainer = document.createElement('div');
     this.lyricsContainer.id = 'yt-lyrics-content';
 
+    // Event delegation for clicking timestamped lyrics to seek
+    this.lyricsContainer.addEventListener('click', (e) => {
+      const lineEl = e.target.closest('.yt-lyric-line');
+      if (!lineEl) return;
+
+      const idMatch = lineEl.id.match(/^lyric-line-(\d+)$/);
+      if (!idMatch) return;
+
+      const index = parseInt(idMatch[1], 10);
+      const lyric = this.parsedLyrics[index];
+      if (!lyric || typeof lyric.time !== 'number') return;
+
+      const videoEl = document.querySelector('video.html5-main-video');
+      if (!videoEl) return;
+
+      let seekTime = lyric.time - this.offset;
+      if (seekTime < 0) seekTime = 0;
+
+      videoEl.currentTime = seekTime;
+    });
+
     // ── Search Container ───────────────────────────────────────────
     this.searchContainer = document.createElement('div');
     this.searchContainer.id = 'yt-search-container';
